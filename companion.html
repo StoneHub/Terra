@@ -1,0 +1,694 @@
+<meta charset="utf-8">
+<title>Terra — IRB Companion</title>
+<style>
+  :root {
+    --ground: #F2F5EA;
+    --panel: #EAEFDC;
+    --ink: #1B2416;
+    --ink-soft: #47563D;
+    --line: #C6D1B2;
+    --sun: #8A6800;
+    --water: #275F8C;
+    --lock: #79836E;
+    --term-bg: #0C1013;
+    --term-ink: #E6ECF4;
+    --term-dim: #A9B6C4;
+    --term-prompt: #9BD684;
+    --term-line: #242C35;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #0F140F;
+      --panel: #182017;
+      --ink: #F2F5EC;
+      --ink-soft: #BCC8AE;
+      --line: #2F3B2B;
+      --sun: #EBC45C;
+      --water: #96C4E9;
+      --lock: #7B856F;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0F140F;
+    --panel: #182017;
+    --ink: #F2F5EC;
+    --ink-soft: #BCC8AE;
+    --line: #2F3B2B;
+    --sun: #EBC45C;
+    --water: #96C4E9;
+    --lock: #7B856F;
+  }
+  :root[data-theme="light"] {
+    --ground: #F2F5EA;
+    --panel: #EAEFDC;
+    --ink: #1B2416;
+    --ink-soft: #47563D;
+    --line: #C6D1B2;
+    --sun: #8A6800;
+    --water: #275F8C;
+    --lock: #79836E;
+  }
+
+  /* The artifact host owns html/body (its theme CSS repaints them, and its
+     iframe may refuse to scroll — Safari especially). So we own everything
+     inside .page instead: it is the scroll container AND the painted ground.
+     Element-level scrolling can't be blocked by any host wrapper. */
+  :root { color-scheme: light dark; }
+  html, body { height: 100%; overflow: hidden; }
+  .page {
+    height: 100vh;
+    height: 100dvh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif;
+    line-height: 1.6;
+    font-size: 17px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 3.5rem 1.5rem 5rem; }
+
+  code, pre, .mono {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  .label {
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--sun);
+  }
+
+  /* ---------- header ---------- */
+  header { margin-bottom: 3.5rem; }
+  h1 {
+    font-size: clamp(2.6rem, 7vw, 4rem);
+    font-weight: 400;
+    letter-spacing: 0.28em;
+    margin: 0.5rem 0 0.25rem;
+    text-wrap: balance;
+  }
+  h1 .sigil { letter-spacing: 0; }
+  .tagline { font-style: italic; color: var(--ink-soft); margin: 0; max-width: 34rem; }
+  .only-light, .only-dark { display: none; }
+  @media (prefers-color-scheme: light) { .only-light { display: inline; } }
+  @media (prefers-color-scheme: dark)  { .only-dark  { display: inline; } }
+  :root[data-theme="light"] .only-light { display: inline; }
+  :root[data-theme="light"] .only-dark  { display: none; }
+  :root[data-theme="dark"]  .only-dark  { display: inline; }
+  :root[data-theme="dark"]  .only-light { display: none; }
+
+  /* ---------- sections ---------- */
+  section { margin-bottom: 3.5rem; }
+  h2 {
+    font-size: 1.6rem;
+    font-weight: 500;
+    margin: 0 0 0.35rem;
+    text-wrap: balance;
+  }
+  .section-note { color: var(--ink-soft); margin: 0 0 1.5rem; font-style: italic; }
+
+  /* ---------- terminal blocks ---------- */
+  .term {
+    background: var(--term-bg);
+    border-radius: 6px;
+    margin: 1rem 0;
+    overflow: hidden;
+  }
+  .term-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.4rem 0.9rem;
+    border-bottom: 1px solid var(--term-line);
+  }
+  .term-bar .title {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.72rem; color: var(--term-dim); letter-spacing: 0.06em;
+  }
+  .term pre {
+    margin: 0; padding: 0.9rem 1rem;
+    overflow-x: auto;
+    font-size: 0.9rem; line-height: 1.65;
+    color: var(--term-ink);
+  }
+  .term .p { color: var(--term-prompt); user-select: none; }
+  .term .out { color: var(--term-dim); }
+  .term .map { letter-spacing: 0.05em; color: var(--term-ink); }
+  .copy {
+    font-family: system-ui, sans-serif; font-size: 0.7rem; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--term-dim); background: none;
+    border: 1px solid var(--term-line); border-radius: 4px;
+    padding: 0.15rem 0.55rem; cursor: pointer;
+  }
+  .copy:hover { color: var(--term-ink); border-color: var(--term-dim); }
+  .copy:focus-visible, a:focus-visible { outline: 2px solid var(--sun); outline-offset: 2px; }
+
+  /* ---------- getting started steps ---------- */
+  .step { display: grid; grid-template-columns: 3rem 1fr; gap: 0 1rem; margin-bottom: 2.25rem; }
+  .step-num {
+    font-size: 1.9rem; color: var(--sun); line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+  }
+  .step h3 { margin: 0.25rem 0 0.4rem; font-size: 1.15rem; font-weight: 600; }
+  .step p { margin: 0 0 0.25rem; }
+  .step .term { margin-bottom: 0; }
+  @media (max-width: 560px) { .step { grid-template-columns: 1fr; } .step-num { line-height: 1; } }
+
+  /* ---------- cards ---------- */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0.9rem; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 1rem 1.1rem;
+  }
+  .card h3 { margin: 0 0 0.3rem; font-size: 1rem; font-weight: 600; }
+  .card p { margin: 0.3rem 0 0; font-size: 0.95rem; color: var(--ink-soft); }
+  .card code {
+    font-size: 0.82rem; color: var(--water);
+    overflow-wrap: anywhere;
+  }
+  .card .glyph { font-size: 1.3rem; margin-right: 0.35rem; }
+
+  /* ---------- tables ---------- */
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+  th {
+    font-family: system-ui, sans-serif; font-size: 0.7rem; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft);
+    text-align: left; padding: 0.6rem 0.9rem;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel);
+  }
+  td { padding: 0.55rem 0.9rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  td code { font-size: 0.82rem; color: var(--water); }
+  .legend-emoji { font-size: 1.15rem; }
+
+  /* ---------- emoji chips ---------- */
+  .chip-group { margin-bottom: 0.75rem; }
+  .chip-group h4 {
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 0.7rem; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--ink-soft); margin: 0 0 0.35rem;
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .chip {
+    font-size: 1.3rem; line-height: 1;
+    padding: 0.45rem 0.5rem;
+    background: var(--panel);
+    border: 1px solid var(--line); border-radius: 6px;
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .chip:hover { border-color: var(--sun); }
+  .chip:focus-visible { outline: 2px solid var(--sun); outline-offset: 2px; }
+  .chip.copied { border-color: var(--sun); transform: scale(1.12); }
+  @media (prefers-reduced-motion: reduce) { .chip { transition: none; } .chip.copied { transform: none; } }
+
+  /* ---------- locked levels ---------- */
+  .locked .card { opacity: 0.62; border-style: dashed; }
+  .locked .card h3 { color: var(--lock); }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding-top: 1.25rem; margin-top: 3rem;
+    color: var(--ink-soft); font-size: 0.88rem; font-style: italic;
+  }
+  footer code { font-style: normal; font-size: 0.8rem; }
+</style>
+
+<div class="page">
+<div class="wrap">
+  <header>
+    <p class="label">Companion &nbsp;·&nbsp; Levels 1–2: Genesis &amp; Life</p>
+    <h1><span class="sigil">✨</span> T E R R A</h1>
+    <p class="tagline">
+      <span class="only-light">☀️ And there was light. A field guide for the newly divine.</span>
+      <span class="only-dark">🌑 Darkness upon the face of the deep. A field guide for the newly divine.</span>
+    </p>
+  </header>
+
+  <section id="laws">
+    <h2>The laws of Terra</h2>
+    <p class="section-note">Three rules govern everything below — and all three are real Ruby, not game fiction.</p>
+    <div class="cards">
+      <div class="card">
+        <h3>⚡ The echo is the UI</h3>
+        <p>IRB prints every expression's return value. Terra draws itself through that echo: <code>world</code> is a map because <code>World#inspect</code> returns one. If you can see it, it's a real object you can hold.</p>
+      </div>
+      <div class="card">
+        <h3>⏳ Time waits for you</h3>
+        <p>There is no engine loop. Nothing moves until you spend days explicitly: <code>pass</code> for one, <code>pass 7</code> for a week. Between commands the world is a photograph.</p>
+      </div>
+      <div class="card">
+        <h3>🧊 Freeze is forever</h3>
+        <p><code>world.freeze</code> invokes Ruby's real <code>Object#freeze</code>: permanent immutability. The map ices over, every power refuses you, and there is no unfreeze — there never has been, in any Ruby program. <code>big_bang!</code> abandons the frozen universe for a fresh one; the old world goes to the garbage collector, which is exactly where frozen objects you're done with belong.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="getting-started">
+    <h2>Getting started</h2>
+    <p class="section-note">Six steps from an empty void to an ecosystem with your fingerprints on it. Keep this page beside your terminal. (In a hurry? <code>eden!</code> conjures a ready-made world — then edit it with <code>unmake</code>.)</p>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div>
+        <h3>Enter the void</h3>
+        <p>From the Terra folder. This opens IRB — Ruby's interactive shell — with your powers pre-loaded. Everything you type is real Ruby, evaluated the moment you press return.</p>
+        <div class="term">
+          <div class="term-bar"><span class="title">zsh</span><button class="copy" data-cmd="bin/terra">copy</button></div>
+          <pre><span class="p">$</span> bin/terra
+<span class="out">✨  T E R R A  ✨
+You are a god. Type `powers` to see your abilities.</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div>
+        <h3>Let there be light</h3>
+        <p>The world starts as void — nothing can exist until you illuminate it. <code>:light</code> is a <em>symbol</em>: Ruby's lightweight name-value, the idiom for options from a fixed set.</p>
+        <div class="term">
+          <div class="term-bar"><span class="title">irb — terra</span><button class="copy" data-cmd="let_there_be :light">copy</button></div>
+          <pre><span class="p">&gt;&gt;</span> let_there_be :light
+<span class="out">And there was light. 🌅</span>
+<span class="out map">☀️  Terra
+    0 1 2 3 4 5 …
+ 0  🟩🟩🟩🟩🟩🟩
+ 1  🟩🟩🟩🟩🟩🟩</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div>
+        <h3>Make something — and keep your grip on it</h3>
+        <p>Assign what you spawn to a variable. It isn't a menu selection; it's a live Ruby object you now hold. The keyword arguments (<code>at:</code>, <code>size:</code>, <code>name:</code>) are all optional — omit them and Terra improvises.</p>
+        <div class="term">
+          <div class="term-bar"><span class="title">irb — terra</span><button class="copy" data-cmd='lake = spawn :lake, at: [3, 4], name: "Mirrormere"'>copy</button></div>
+          <pre><span class="p">&gt;&gt;</span> lake = spawn :lake, at: [3, 4], name: "Mirrormere"
+<span class="out map"> 3  🟩🟩🟩🌊🟩🟩
+ 4  🟩🟩🌊🌊🌊🟩
+ 5  🟩🟩🟩🌊🟩🟩</span>
+<span class="out">=&gt; 🌊 Lake "Mirrormere" — 5 tiles centered near (3, 4)</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div>
+        <h3>Change it after the fact</h3>
+        <p>The object stays alive. Rename it with plain assignment, mutate it with its own methods — the map redraws itself after every act.</p>
+        <div class="term">
+          <div class="term-bar"><span class="title">irb — terra</span><button class="copy" data-cmd="lake.freeze!">copy</button></div>
+          <pre><span class="p">&gt;&gt;</span> lake.freeze!
+<span class="out map"> 3  🟩🟩🟩🧊🟩🟩
+ 4  🟩🟩🧊🧊🧊🟩
+ 5  🟩🟩🟩🧊🟩🟩</span>
+<span class="out">=&gt; 🧊 Lake "Mirrormere" — 5 tiles centered near (3, 4)</span>
+<span class="p">&gt;&gt;</span> lake.thaw!</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div>
+        <h3>Breathe life, then spend some days</h3>
+        <p><code>let_there_be :life</code> unlocks creatures. Animals hold still until you <code>pass</code> — then rabbits wander, ferns spread, old growth dies. The day counter in the map header is your clock.</p>
+        <div class="term">
+          <div class="term-bar"><span class="title">irb — terra</span><button class="copy" data-cmd="let_there_be :life">copy</button></div>
+          <pre><span class="p">&gt;&gt;</span> let_there_be :life
+<span class="out">🌱 And the world drew breath…</span>
+<span class="p">&gt;&gt;</span> spawn :rabbit, count: 3
+<span class="out">⏳ Nothing will move until you `pass`.</span>
+<span class="p">&gt;&gt;</span> pass 6
+<span class="out map">☀️  Terra — day 6
+ 7  🟩🟩🟩🐇🟩🌿🌿🟩
+ 8  🟩🐇🟩🟩🟩🌿🟩🟩
+    🐾 3 animals · 🌱 8 plants</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">6</div>
+      <div>
+        <h3>Write a creature's brain</h3>
+        <p>The finale: hand <code>spawn</code> a block and it replaces the animal's instinct. Your block runs once per day, every day, forever. (Ruby quirk, learned honestly: a brace block needs the parens — <code>spawn(:rabbit) { … }</code> — or use <code>do…end</code>.)</p>
+        <div class="term">
+          <div class="term-bar"><span class="title">irb — terra</span><button class="copy" data-cmd="pilgrim = spawn(:rabbit) { |r| r.hop_toward :water }">copy</button></div>
+          <pre><span class="p">&gt;&gt;</span> pilgrim = spawn(:rabbit) { |r| r.hop_toward :water }
+<span class="out">=&gt; 🐇 Rabbit at (11, 0) — age 0, divine brain</span>
+<span class="p">&gt;&gt;</span> pass 10
+<span class="out">…and the pilgrim is at the lakeshore.</span></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="irb-kit">
+    <h2>IRB survival kit</h2>
+    <p class="section-note">The shell is half the lesson. These work in any IRB, not just Terra.</p>
+    <div class="cards">
+      <div class="card"><h3>↑ / ↓</h3><p>Walk your command history. Re-run or edit your last act of creation.</p></div>
+      <div class="card"><h3><code>_</code></h3><p>The last returned value. Forgot to assign your mountain? <code>mtn = _</code> rescues it.</p></div>
+      <div class="card"><h3>Tab</h3><p>Autocomplete — press the actual Tab key. It knows the class of <em>variables</em> (<code>lake.f</code> → <code>freeze!</code>) but not of method results; for those, take a handle first: <code>w = world</code>, then <code>w.fe</code>.</p></div>
+      <div class="card"><h3>Ctrl-C</h3><p>Abandon the line you're typing. Ctrl-D or <code>exit</code> leaves IRB entirely.</p></div>
+      <div class="card"><h3>The <code>=&gt;</code> echo</h3><p>IRB prints every expression's return value. In Terra that echo <em>is</em> the UI — the map is just <code>world.inspect</code>.</p></div>
+      <div class="card"><h3>Nothing persists</h3><p>Exiting ends the universe. <code>bin/terra</code> starts a fresh void every time.</p></div>
+    </div>
+  </section>
+
+  <section id="powers">
+    <h2>Your powers</h2>
+    <p class="section-note">Everything callable bare at the prompt. <code>powers</code> prints the short version in-game.</p>
+    <div class="table-scroll">
+      <table>
+        <tr><th>Invocation</th><th>Effect</th></tr>
+        <tr><td><code>let_there_be :light</code></td><td>Begin creation. Nothing can be spawned in the void.</td></tr>
+        <tr><td><code>spawn :lake, at: [x, y], size: 2, name: "…"</code></td><td>Create a landform; all keywords optional. Kinds: <code>:lake :mountain :forest :desert</code>. Returns the thing itself.</td></tr>
+        <tr><td><code>let_there_be :life</code></td><td>Unlock creatures. Needs light first.</td></tr>
+        <tr><td><code>spawn :rabbit, count: 3, at: [x, y]</code></td><td>Creatures: <code>:rabbit :tortoise :fish :hawk :fern :flower :lily</code>. Add a block for a divine brain (animals only).</td></tr>
+        <tr><td><code>pass</code> &nbsp;/&nbsp; <code>pass 7</code></td><td>Advance time one day / a week. The only way anything moves.</td></tr>
+        <tr><td><code>smite at: [x, y]</code> / <code>smite 5, 1</code> / <code>smite wolf</code></td><td>🔥 By place or by reference — see <em>Targeting &amp; smiting</em>. Kills what it lands on.</td></tr>
+        <tr><td><code>unmake :lake</code> / <code>unmake "Mirkwood"</code> / <code>unmake herd</code></td><td>Remove by kind, by name, by reference, or by array. Kind/name act only when exactly one thing matches — ambiguity lists candidates. Land reverts to plains.</td></tr>
+        <tr><td><code>eden!</code> <span style="white-space:nowrap;">(<code>width:</code>/<code>height:</code> optional)</span></td><td>A new world, pre-filled: terrain, animals, plants, life unlocked. Built with the same spawns you'd type yourself.</td></tr>
+        <tr><td><code>big_bang! width: 20, height: 12</code></td><td>Unmake everything; a fresh void — larger, if you ask (max 40×30). The only exit from a frozen world, and the only way to "resize".</td></tr>
+        <tr><td><code>ordain :wolf, emoji: "🐺", habitat: :land, speed: 3</code></td><td>Invent a species (plants: <code>grows_on: [:sand]</code> + <code>spread:</code>/<code>lifespan:</code>). See the workshop below.</td></tr>
+        <tr><td><code>world</code> &nbsp;/&nbsp; <code>behold</code></td><td>Redraw the whole map.</td></tr>
+        <tr><td><code>world.at(x, y)</code></td><td>Inspect one tile — terrain, coordinates, owner.</td></tr>
+        <tr><td><code>world.features</code></td><td>Everything you've made, as an array of live objects.</td></tr>
+        <tr><td><code>world.animals</code> &nbsp;/&nbsp; <code>world.rabbits</code></td><td>Fauna, flora (<code>world.plants</code>), or any species by plural. <code>world.day</code> is the clock.</td></tr>
+        <tr><td><code>powers</code></td><td>The in-terminal cheat sheet.</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section id="creations">
+    <h2>Your creations</h2>
+    <p class="section-note">Each kind has its own methods — call them on the variable you kept.</p>
+    <div class="cards">
+      <div class="card">
+        <h3><span class="glyph">🌊</span>Lake</h3>
+        <p><code>lake.freeze!</code> → 🧊 &nbsp; <code>lake.thaw!</code> &nbsp; <code>lake.frozen?</code></p>
+        <p>Default names: Stillwater, Mirrormere, Lake Umber.</p>
+      </div>
+      <div class="card">
+        <h3><span class="glyph">⛰️</span>Mountain</h3>
+        <p><code>mtn.erupt!</code> → 🌋 plus a scorched ring. <code>mtn.erupted?</code></p>
+        <p>Grumblepeak, The Old Tooth, Mount Doubt.</p>
+      </div>
+      <div class="card">
+        <h3><span class="glyph">🌲</span>Forest</h3>
+        <p><code>forest.grow!</code> — spreads one ring onto open plains. Call it again. And again.</p>
+        <p>The Whisperwood, Fernholm, Tanglewild.</p>
+      </div>
+      <div class="card">
+        <h3><span class="glyph">🏜️</span>Desert</h3>
+        <p>No methods yet. It's a desert. It endures.</p>
+        <p>The Dry Quiet, Sunscar, The Glass Flats.</p>
+      </div>
+    </div>
+    <p style="margin-top:1rem;">Every creation also answers <code>.name</code>, <code>.name = "…"</code>, <code>.size</code>, <code>.center</code>, and <code>.tiles</code>.</p>
+  </section>
+
+  <section id="life">
+    <h2>Life</h2>
+    <p class="section-note">Unlocked by <code>let_there_be :life</code>. Creatures act once per day, only when days pass.</p>
+
+    <h3 style="font-size:1.1rem; margin:1.5rem 0 0.5rem;">Animals — they move</h3>
+    <div class="table-scroll">
+      <table>
+        <tr><th>Spawn</th><th>Habitat</th><th>Speed</th><th>Temperament</th></tr>
+        <tr><td class="legend-emoji">🐇 <code>:rabbit</code></td><td>land</td><td>2 tiles/day</td><td>Quick, aimless, everywhere.</td></tr>
+        <tr><td class="legend-emoji">🐢 <code>:tortoise</code></td><td>land</td><td>1 tile/day</td><td>Gets there eventually.</td></tr>
+        <tr><td class="legend-emoji">🐟 <code>:fish</code></td><td>water only</td><td>1 tile/day</td><td>Cannot cross ice. Freeze its lake and it waits, patiently, for a thaw that may never come.</td></tr>
+        <tr><td class="legend-emoji">🦅 <code>:hawk</code></td><td>air — anywhere</td><td>3 tiles/day</td><td>Terrain means nothing to it.</td></tr>
+      </table>
+    </div>
+
+    <h3 style="font-size:1.1rem; margin:1.5rem 0 0.5rem;">Plants — they spread, and they die</h3>
+    <div class="table-scroll">
+      <table>
+        <tr><th>Spawn</th><th>Grows on</th><th>Spread/day</th><th>Lifespan</th></tr>
+        <tr><td class="legend-emoji">🌿 <code>:fern</code></td><td>plains, forest</td><td>20%</td><td>12 days</td></tr>
+        <tr><td class="legend-emoji">🌼 <code>:flower</code></td><td>plains</td><td>15%</td><td>8 days</td></tr>
+        <tr><td class="legend-emoji">🪷 <code>:lily</code></td><td>water</td><td>15%</td><td>10 days</td></tr>
+      </table>
+    </div>
+    <p style="margin-top:0.75rem;">Left alone, populations find their own equilibrium: spreading fills the land, lifespans clear it. <code>pass 30</code> and watch.</p>
+
+    <h3 style="font-size:1.1rem; margin:1.5rem 0 0.5rem;">Divine brains — blocks as behavior</h3>
+    <p>A block handed to <code>spawn</code> replaces an animal's instinct entirely; Terra calls it once per day with the animal itself. This is the Ruby block in its natural role: behavior as an argument.</p>
+    <div class="term">
+      <div class="term-bar"><span class="title">irb — terra</span><button class="copy" data-cmd="spawn(:hawk) { |h| h.hop_toward [0, 0] }">copy</button></div>
+      <pre><span class="p">&gt;&gt;</span> spawn(:rabbit) { |r| r.hop_toward :water }   <span class="out"># a pilgrim</span>
+<span class="p">&gt;&gt;</span> spawn(:hawk)   { |h| h.hop_toward [0, 0] }   <span class="out"># a homing hawk</span>
+<span class="p">&gt;&gt;</span> spawn :tortoise do |t|                        <span class="out"># do…end works bare</span>
+<span class="p">..</span>   t.age.even? ? t.wander : t.stay
+<span class="p">..</span> end</pre>
+    </div>
+    <p>Verbs a brain can use: <code>wander</code>, <code>hop_toward(:forest)</code>, <code>hop_toward([x, y])</code>, <code>stay</code> — plus anything else the animal answers: <code>age</code>, <code>tile</code>, <code>nearest(:water)</code>. Plants ignore blocks; they have no will of their own.</p>
+
+    <h3 style="font-size:1.1rem; margin:1.5rem 0 0.5rem;">Death, removal, and what fills the hole</h3>
+    <div class="table-scroll">
+      <table>
+        <tr><th>Event</th><th>What actually happens</th></tr>
+        <tr><td>Plant reaches its lifespan</td><td>It dies quietly and vanishes — no corpse, the tile simply shows terrain again. (Its offspring usually outlive it.)</td></tr>
+        <tr><td>Animal grows old</td><td>Nothing. Animals are currently immortal — nothing hunts, nothing starves. Food chains are Level 3's problem.</td></tr>
+        <tr><td><code>smite at: [x, y]</code></td><td>The tile scorches and anything standing on it dies, by name, in the log.</td></tr>
+        <tr><td><code>unmake lake</code></td><td>The feature's tiles revert to <strong>plains</strong> — water never replaces land; water only exists where a lake does. Tiles another feature claimed later stay theirs.</td></tr>
+        <tr><td><code>unmake rabbit</code> / <code>unmake herd</code></td><td>Returns to dust, single or plural. Removal is instant; no time needs to pass.</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section id="targeting">
+    <h2>Targeting &amp; smiting</h2>
+    <p class="section-note">Coords are for places, references are for things. The difference is a Ruby lesson wearing a thundercloud.</p>
+
+    <h3 style="font-size:1.1rem; margin:1.5rem 0 0.5rem;">Find things on the map</h3>
+    <div class="term">
+      <div class="term-bar"><span class="title">irb — terra</span><button class="copy" data-cmd="world.animals">copy</button></div>
+      <pre><span class="p">&gt;&gt;</span> world.animals
+<span class="out">=&gt; [🐇 Rabbit at (1, 1) — age 3, instinct, 🐺 Wolf at (5, 1) — age 2, instinct]</span>
+<span class="p">&gt;&gt;</span> world.rabbits          <span class="out"># the plural of ANY species is a method — even world.lilies</span>
+<span class="p">&gt;&gt;</span> world.at(5, 1)
+<span class="out">=&gt; 🟩 (5, 1) plains · standing here: 🐺 Wolf at (5, 1) — age 2, instinct</span></pre>
+    </div>
+    <p>Every expression echoes through <code>inspect</code>, and Terra's creatures print with emoji and coords — <strong>the REPL is your radar</strong>. (Writing generous <code>inspect</code> methods is a habit that makes real-world debugging bearable too.)</p>
+
+    <h3 style="font-size:1.1rem; margin:1.5rem 0 0.5rem;">Lost the reference?</h3>
+    <p>Spawned something without assigning it? Nothing is lost — the world holds every reference, and you can fish yours back out:</p>
+    <div class="term">
+      <div class="term-bar"><span class="title">irb — terra</span><button class="copy" data-cmd='world.features.find { |f| f.name == "Mirkwood" }'>copy</button></div>
+      <pre><span class="p">&gt;&gt;</span> world.features                                      <span class="out"># everything, named, with coords</span>
+<span class="p">&gt;&gt;</span> woods = world.features.find { |f| f.name == "Mirkwood" }
+<span class="p">&gt;&gt;</span> woods = _                                            <span class="out"># or: _ is the last result</span></pre>
+    </div>
+    <p><code>unmake</code> and <code>smite</code> also accept a kind (<code>:forest</code>) or a feature's name (<code>"Mirkwood"</code>) directly — but only when exactly one thing matches. Two lakes and <code>unmake :lake</code> will list both and make you choose. Names are ambiguous; references never are.</p>
+
+    <h3 style="font-size:1.1rem; margin:1.5rem 0 0.5rem;">Two ways to aim</h3>
+    <div class="table-scroll">
+      <table>
+        <tr><th>Invocation</th><th>What it hits</th></tr>
+        <tr><td><code>smite at: [5, 1]</code> or <code>smite 5, 1</code></td><td>The <strong>place</strong>. Splash damage to whatever stands there — and it can miss, if the wolf moved since you looked.</td></tr>
+        <tr><td><code>smite wolf</code></td><td>The <strong>thing</strong>. A live object reference tracks its target anywhere. Never misses.</td></tr>
+        <tr><td><code>smite herd</code></td><td>Arrays work too — one bolt per member.</td></tr>
+      </table>
+    </div>
+    <p>Coming from Kotlin: this is the pointer/value intuition made visceral. A coordinate is a value describing where something <em>was</em>; a variable holds a reference to what it <em>is</em>.</p>
+
+    <h3 style="font-size:1.1rem; margin:1.5rem 0 0.5rem;">Targeting queries — a taste of Level 3</h3>
+    <p>The "targeting system" is just Enumerable over live objects. Providence will build on exactly this:</p>
+    <div class="term">
+      <div class="term-bar"><span class="title">irb — terra</span><button class="copy" data-cmd="world.animals.select { |a| a.near?(lake) }">copy</button></div>
+      <pre><span class="p">&gt;&gt;</span> wolf = world.animals.find { |a| a.kind == :wolf }   <span class="out"># first match</span>
+<span class="p">&gt;&gt;</span> world.animals.max_by(&amp;:age)                          <span class="out"># the elder</span>
+<span class="p">&gt;&gt;</span> world.animals.select { |a| a.near?(lake) }           <span class="out"># spatial query (range: 2 default)</span>
+<span class="p">&gt;&gt;</span> world.rabbits.each { |r| smite r }                    <span class="out"># the flood, basically</span></pre>
+    </div>
+  </section>
+
+  <section id="workshop">
+    <h2>Creator's workshop</h2>
+    <p class="section-note">The stock world is a starter kit. These are the tools for filling it out.</p>
+
+    <h3 style="font-size:1.1rem; margin:1.5rem 0 0.5rem;">A bigger canvas</h3>
+    <p>Worlds are born with their size — there is no stretching a live one. Ask the next universe for more room (up to 40×30; past ~25 wide the map may wrap in a narrow terminal):</p>
+    <div class="term">
+      <div class="term-bar"><span class="title">irb — terra</span><button class="copy" data-cmd="big_bang! width: 20, height: 12">copy</button></div>
+      <pre><span class="p">&gt;&gt;</span> big_bang! width: 20, height: 12
+<span class="out">The old universe collapses behind you. A new void awaits. ✨</span></pre>
+    </div>
+
+    <h3 style="font-size:1.1rem; margin:1.5rem 0 0.5rem;">Invent a species</h3>
+    <p><code>ordain</code> writes a new entry in the book of species — then <code>spawn</code> it like any native. Under the hood it's one line: <code>KINDS[:wolf] = { … }</code> in an ordinary, deliberately-unfrozen Hash. No new class required; a species is just data. Ordained species last for the session — when one earns permanence, copy its line into <code>lib/terra/animal.rb</code> or <code>plant.rb</code>.</p>
+    <div class="term">
+      <div class="term-bar"><span class="title">irb — terra</span><button class="copy" data-cmd='ordain :wolf, emoji: "🐺", habitat: :land, speed: 3'>copy</button></div>
+      <pre><span class="p">&gt;&gt;</span> ordain :wolf, emoji: "🐺", habitat: :land, speed: 3
+<span class="p">&gt;&gt;</span> spawn :wolf, count: 2
+<span class="p">&gt;&gt;</span> ordain :cactus, emoji: "🌵", grows_on: [:sand], spread: 0.05, lifespan: 40
+<span class="p">&gt;&gt;</span> spawn :cactus
+<span class="p">&gt;&gt;</span> spawn(:wolf) { |w| w.hop_toward :forest }   <span class="out"># brains work on your species too</span></pre>
+    </div>
+    <p>Animal knobs: <code>habitat:</code> (<code>:land</code> / <code>:water</code> / <code>:air</code>) and <code>speed:</code> (tiles per day). Plant knobs: <code>grows_on:</code> (terrain list), <code>spread:</code> (0–1 chance per day), <code>lifespan:</code> (days).</p>
+
+    <h3 style="font-size:1.1rem; margin:1.5rem 0 0.5rem;">Copy-ready menagerie</h3>
+    <p>Click a glyph to copy it, paste it into an <code>ordain</code>. Suggested habitats are just that — you're the god here.</p>
+    <div class="chip-group">
+      <h4>Land</h4>
+      <div class="chips">
+        <button class="chip" data-glyph="🐺" title="wolf">🐺</button>
+        <button class="chip" data-glyph="🦊" title="fox">🦊</button>
+        <button class="chip" data-glyph="🦌" title="deer">🦌</button>
+        <button class="chip" data-glyph="🐗" title="boar">🐗</button>
+        <button class="chip" data-glyph="🐐" title="goat">🐐</button>
+        <button class="chip" data-glyph="🐘" title="elephant">🐘</button>
+        <button class="chip" data-glyph="🦣" title="mammoth">🦣</button>
+        <button class="chip" data-glyph="🦔" title="hedgehog">🦔</button>
+        <button class="chip" data-glyph="🐁" title="mouse">🐁</button>
+        <button class="chip" data-glyph="🐍" title="snake">🐍</button>
+        <button class="chip" data-glyph="🐌" title="snail — speed 1, obviously">🐌</button>
+        <button class="chip" data-glyph="🦖" title="tyrannosaur">🦖</button>
+      </div>
+    </div>
+    <div class="chip-group">
+      <h4>Air</h4>
+      <div class="chips">
+        <button class="chip" data-glyph="🦉" title="owl">🦉</button>
+        <button class="chip" data-glyph="🦇" title="bat">🦇</button>
+        <button class="chip" data-glyph="🦋" title="butterfly">🦋</button>
+        <button class="chip" data-glyph="🐝" title="bee">🐝</button>
+        <button class="chip" data-glyph="🐦" title="bird">🐦</button>
+        <button class="chip" data-glyph="🦩" title="flamingo">🦩</button>
+        <button class="chip" data-glyph="🦢" title="swan">🦢</button>
+        <button class="chip" data-glyph="🐉" title="dragon — air, speed 4, why not">🐉</button>
+      </div>
+    </div>
+    <div class="chip-group">
+      <h4>Water</h4>
+      <div class="chips">
+        <button class="chip" data-glyph="🦈" title="shark">🦈</button>
+        <button class="chip" data-glyph="🐙" title="octopus">🐙</button>
+        <button class="chip" data-glyph="🐳" title="whale — needs a big lake">🐳</button>
+        <button class="chip" data-glyph="🦀" title="crab">🦀</button>
+        <button class="chip" data-glyph="🐊" title="crocodile">🐊</button>
+        <button class="chip" data-glyph="🦆" title="duck">🦆</button>
+        <button class="chip" data-glyph="🪼" title="jellyfish">🪼</button>
+        <button class="chip" data-glyph="🦞" title="lobster">🦞</button>
+      </div>
+    </div>
+    <div class="chip-group">
+      <h4>Flora</h4>
+      <div class="chips">
+        <button class="chip" data-glyph="🌵" title="cactus — grows_on: [:sand]">🌵</button>
+        <button class="chip" data-glyph="🍄" title="mushroom — grows_on: [:forest]">🍄</button>
+        <button class="chip" data-glyph="🌾" title="wheat">🌾</button>
+        <button class="chip" data-glyph="🌻" title="sunflower">🌻</button>
+        <button class="chip" data-glyph="🌳" title="oak">🌳</button>
+        <button class="chip" data-glyph="🎋" title="bamboo">🎋</button>
+        <button class="chip" data-glyph="🌺" title="hibiscus">🌺</button>
+        <button class="chip" data-glyph="🍀" title="clover">🍀</button>
+        <button class="chip" data-glyph="🪸" title="coral — grows_on: [:water]">🪸</button>
+      </div>
+    </div>
+    <div class="chip-group">
+      <h4>Wonders &amp; omens</h4>
+      <div class="chips">
+        <button class="chip" data-glyph="🗿" title="monolith">🗿</button>
+        <button class="chip" data-glyph="⚡" title="lightning">⚡</button>
+        <button class="chip" data-glyph="☄️" title="comet">☄️</button>
+        <button class="chip" data-glyph="👁️" title="the watcher">👁️</button>
+        <button class="chip" data-glyph="🦴" title="old bones">🦴</button>
+        <button class="chip" data-glyph="⛩️" title="shrine">⛩️</button>
+        <button class="chip" data-glyph="🕳️" title="the hole">🕳️</button>
+        <button class="chip" data-glyph="🔮" title="oracle">🔮</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="legend">
+    <h2>Map legend</h2>
+    <div class="table-scroll">
+      <table>
+        <tr><th>Glyph</th><th>Terrain</th><th>How it happens</th></tr>
+        <tr><td class="legend-emoji">⬛</td><td>void</td><td>The world before light.</td></tr>
+        <tr><td class="legend-emoji">🟩</td><td>plains</td><td>What light makes. The blank canvas.</td></tr>
+        <tr><td class="legend-emoji">🌊 🧊</td><td>water / ice</td><td><code>spawn :lake</code>, then <code>freeze!</code> / <code>thaw!</code></td></tr>
+        <tr><td class="legend-emoji">⛰️ 🌋</td><td>mountain / volcano</td><td><code>spawn :mountain</code>, then <code>erupt!</code></td></tr>
+        <tr><td class="legend-emoji">🌲</td><td>forest</td><td><code>spawn :forest</code>; spreads with <code>grow!</code></td></tr>
+        <tr><td class="legend-emoji">🟨</td><td>sand</td><td><code>spawn :desert</code></td></tr>
+        <tr><td class="legend-emoji">🔥</td><td>scorched</td><td><code>smite</code>, or standing too near an eruption.</td></tr>
+        <tr><td class="legend-emoji">🐇🌿…</td><td>creatures</td><td>Drawn on top of terrain; the tally line under the map counts them.</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section id="ruby">
+    <h2>The Ruby you're absorbing</h2>
+    <p class="section-note">Every power is an ordinary language feature wearing robes. Kotlin column for orientation.</p>
+    <div class="table-scroll">
+      <table>
+        <tr><th>You typed</th><th>The Ruby idea</th><th>Kotlin-ish</th></tr>
+        <tr><td><code>:lake</code></td><td>Symbol — interned name, compared by identity</td><td>enum entry / sealed object</td></tr>
+        <tr><td><code>at: [3, 4], size: 2</code></td><td>Keyword arguments with defaults</td><td>named params with defaults</td></tr>
+        <tr><td><code>lake.name = "…"</code></td><td><code>attr_accessor</code> — one line generates getter + setter</td><td><code>var</code> property</td></tr>
+        <tr><td><code>lake.freeze!</code></td><td>Trailing <code>!</code> — convention for "mutates / has teeth"</td><td>no equivalent — pure naming culture</td></tr>
+        <tr><td><code>lake.frozen?</code></td><td>Trailing <code>?</code> — convention for predicates</td><td><code>isFrozen</code></td></tr>
+        <tr><td><code>world.at(3, 4)</code> echoing a description</td><td><code>inspect</code> — every object describes itself; IRB prints it</td><td><code>toString()</code>, but load-bearing</td></tr>
+        <tr><td><code>spawn</code> working bare at the prompt</td><td><code>extend</code> — a module grafted onto one object (IRB's <code>main</code>)</td><td>extension functions, scoped to an instance</td></tr>
+        <tr><td><code>spawn(:rabbit) { |r| … }</code></td><td>blocks — behavior passed as an argument, captured with <code>&amp;brain</code></td><td>trailing lambda, but needing parens here</td></tr>
+        <tr><td><code>world.freeze</code></td><td><code>Object#freeze</code> — real, shallow, irreversible immutability</td><td>closest cousin: <code>val</code>, but at runtime and forever</td></tr>
+        <tr><td><code>world.animals.grep(Animal)</code> internals</td><td><code>grep</code> selects by <code>===</code>; a Class matches its instances</td><td><code>filterIsInstance&lt;Animal&gt;()</code></td></tr>
+        <tr><td><code>ordain :wolf, …</code></td><td>a registry is just an open Hash — new "types" are data, added at runtime</td><td>a sealed hierarchy would refuse; here openness is the point</td></tr>
+        <tr><td><code>world.wolves</code> existing at all</td><td><code>method_missing</code> + <code>respond_to_missing?</code> — the hook Rails built find_by_name on</td><td>no equivalent; the closest is a delegate, at compile time</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section id="locked" class="locked">
+    <h2>Locked tiers</h2>
+    <p class="section-note">Powers you have not yet earned.</p>
+    <div class="cards">
+      <div class="card"><h3>🔒 Level 3 — Providence</h3><p>Enumerable as divine power: bless and smite by query. <code>world.animals.select { … }</code> is already whispering it.</p></div>
+      <div class="card"><h3>🔒 Level 4 — Godhood</h3><p>Reopen classes on a living world. Rabbits learn to fly.</p></div>
+    </div>
+  </section>
+
+  <footer>
+    Terra lives at <code>RubyPlayground/Terra</code> · this page is <code>companion.html</code> · the source code is scripture — read <code>lib/terra/feature.rb</code> when you're ready.
+  </footer>
+</div>
+</div>
+
+<script>
+  document.querySelectorAll(".chip").forEach((chip) => {
+    chip.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(chip.dataset.glyph); } catch {}
+      chip.classList.add("copied");
+      setTimeout(() => chip.classList.remove("copied"), 500);
+    });
+  });
+
+  document.querySelectorAll(".copy").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(btn.dataset.cmd);
+        btn.textContent = "copied";
+      } catch {
+        btn.textContent = "select it";
+      }
+      setTimeout(() => (btn.textContent = "copy"), 1400);
+    });
+  });
+</script>
