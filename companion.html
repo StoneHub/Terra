@@ -253,7 +253,7 @@
 
   <section id="getting-started">
     <h2>Getting started</h2>
-    <p class="section-note">Six steps from an empty void to an ecosystem with your fingerprints on it. Keep this page beside your terminal. (In a hurry? <code>eden!</code> conjures a ready-made world — then edit it with <code>unmake</code>.)</p>
+    <p class="section-note">Six steps from an empty void to an ecosystem with your fingerprints on it. Keep this page beside your terminal. (In a hurry? <code>eden!</code> conjures a ready-made world. Stuck? <code>inspire</code> deals a ritual from the grimoire below.)</p>
 
     <div class="step">
       <div class="step-num">1</div>
@@ -355,6 +355,107 @@ You are a god. Type `powers` to see your abilities.</span></pre>
     </div>
   </section>
 
+  <section id="grimoire">
+    <h2>The grimoire</h2>
+    <p class="section-note">Nine complete rituals, ready to paste. In the game, <code>inspire</code> deals you one at random.</p>
+    <div class="cards" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+      <div class="card">
+        <h3>🐇 The Pilgrimage</h3><p>A rabbit with divine purpose.</p>
+        <pre class="mono" style="font-size:0.8rem; overflow-x:auto; margin:0.5rem 0 0;">pilgrim = spawn(:rabbit) { |r| r.hop_toward :water }
+pass 10
+pilgrim   # where did faith take it?</pre>
+      </div>
+      <div class="card">
+        <h3>🧊 Fimbulwinter</h3><p>Freeze every lake at once. The fish wait, trapped.</p>
+        <pre class="mono" style="font-size:0.8rem; overflow-x:auto; margin:0.5rem 0 0;">world.lakes.each(&amp;:freeze!)
+pass 5    # nothing swims
+world.lakes.each(&amp;:thaw!)</pre>
+      </div>
+      <div class="card">
+        <h3>🌲 Mirkwood Rising</h3><p>Plant one wood, let it swallow the map.</p>
+        <pre class="mono" style="font-size:0.8rem; overflow-x:auto; margin:0.5rem 0 0;">woods = spawn :forest, name: "Mirkwood"
+3.times { woods.grow! }</pre>
+      </div>
+      <div class="card">
+        <h3>📊 The Census</h3><p>A god should know what it governs.</p>
+        <pre class="mono" style="font-size:0.8rem; overflow-x:auto; margin:0.5rem 0 0;">world.beings.group_by(&amp;:kind)
+     .transform_values(&amp;:count)
+world.animals.max_by(&amp;:age)   # the elder</pre>
+      </div>
+      <div class="card">
+        <h3>⚡ The Reckoning</h3><p>Judgment for everything past its fifth year.</p>
+        <pre class="mono" style="font-size:0.8rem; overflow-x:auto; margin:0.5rem 0 0;">elders = world.animals.select { |a| a.age > 5 }
+smite elders</pre>
+      </div>
+      <div class="card">
+        <h3>🌑 Nightfall</h3><p>Darkness is a pause; freeze is an ending.</p>
+        <pre class="mono" style="font-size:0.8rem; overflow-x:auto; margin:0.5rem 0 0;">let_there_be :darkness
+pass 3    # refused — time needs light
+let_there_be :light   # all exactly as it was</pre>
+      </div>
+      <div class="card">
+        <h3>⏳ The Long Silence</h3><p>Walk away. See what the world does without you.</p>
+        <pre class="mono" style="font-size:0.8rem; overflow-x:auto; margin:0.5rem 0 0;">pass 30
+chronicle</pre>
+      </div>
+      <div class="card">
+        <h3>🐺 A New Predator</h3><p>Ordain it, arm it, aim it at the woods.</p>
+        <pre class="mono" style="font-size:0.8rem; overflow-x:auto; margin:0.5rem 0 0;">ordain :wolf, emoji: "🐺", habitat: :land, speed: 3
+spawn(:wolf, count: 2) { |w| w.hop_toward :forest }
+pass 7</pre>
+      </div>
+      <div class="card">
+        <h3>💀 Doomsday</h3><p>End a world properly: memorialize, freeze, move on.</p>
+        <pre class="mono" style="font-size:0.8rem; overflow-x:auto; margin:0.5rem 0 0;">chronicle!   # write the scripture FIRST
+world.freeze
+big_bang! width: 20, height: 12</pre>
+      </div>
+    </div>
+
+    <h3 style="font-size:1.1rem; margin:2rem 0 0.5rem;">Great works — whole worlds, start to finish</h3>
+    <div class="cards" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+      <div class="card">
+        <h3>🌾 The Prairie World</h3><p>A living grassland from nothing, in seven lines.</p>
+        <pre class="mono" style="font-size:0.8rem; overflow-x:auto; margin:0.5rem 0 0;">big_bang! width: 20, height: 12
+let_there_be :light
+terraform :meadow
+spawn :lake, size: 3
+let_there_be :life
+sow 20
+pass 30</pre>
+      </div>
+      <div class="card">
+        <h3>🏝️ The Archipelago</h3><p>Drown the world, then raise islands in it.</p>
+        <pre class="mono" style="font-size:0.8rem; overflow-x:auto; margin:0.5rem 0 0;">big_bang! width: 20, height: 12
+let_there_be :light
+terraform :water
+spawn :grassland, size: 2   # an island
+spawn :grassland, size: 2   # another
+let_there_be :life
+spawn :fish, count: 4
+spawn :hawk
+pass 20</pre>
+      </div>
+      <div class="card">
+        <h3>🐺 The Wolf Winter</h3><p>Predators in the pines while nothing grows.</p>
+        <pre class="mono" style="font-size:0.8rem; overflow-x:auto; margin:0.5rem 0 0;">eden!
+ordain :wolf, emoji: "🐺", habitat: :land, speed: 3
+spawn(:wolf, count: 3) { |w| w.hop_toward :forest }
+let_there_be :snow
+pass 15
+chronicle</pre>
+      </div>
+      <div class="card">
+        <h3>🌧️ The Rain Garden</h3><p>Wet skies, green scars — then have the world write it down.</p>
+        <pre class="mono" style="font-size:0.8rem; overflow-x:auto; margin:0.5rem 0 0;">eden!
+sow 20
+let_there_be :rain
+pass 20
+chronicle!</pre>
+      </div>
+    </div>
+  </section>
+
   <section id="irb-kit">
     <h2>IRB survival kit</h2>
     <p class="section-note">The shell is half the lesson. These work in any IRB, not just Terra.</p>
@@ -375,10 +476,14 @@ You are a god. Type `powers` to see your abilities.</span></pre>
       <table>
         <tr><th>Invocation</th><th>Effect</th></tr>
         <tr><td><code>let_there_be :light</code></td><td>Begin creation. Nothing can be spawned in the void.</td></tr>
-        <tr><td><code>spawn :lake, at: [x, y], size: 2, name: "…"</code></td><td>Create a landform; all keywords optional. Kinds: <code>:lake :mountain :forest :desert</code>. Returns the thing itself.</td></tr>
+        <tr><td><code>spawn :lake, at: [x, y], size: 2, name: "…"</code></td><td>Create a landform; all keywords optional. Kinds: <code>:lake :mountain :forest :desert :grassland</code>. Returns the thing itself.</td></tr>
+        <tr><td><code>terraform :meadow</code></td><td>Repaint <strong>every remaining barren 🟫 tile</strong> as one terrain (<code>:sand</code>, <code>:water</code>, <code>:forest</code>…). Claimed and grown land is untouched — it fills the gaps between your works. <code>terraform :water</code> makes an ocean world; land animals will regret it.</td></tr>
+        <tr><td><code>let_there_be :darkness</code></td><td>Withdraw the light. The world hides (all ⬛) and time refuses to pass — but nothing is destroyed. <code>let_there_be :light</code> restores it exactly. The reversible cousin of <code>freeze</code>: a boolean pauses, a frozen object ends.</td></tr>
         <tr><td><code>let_there_be :life</code></td><td>Unlock creatures. Needs light first.</td></tr>
         <tr><td><code>spawn :rabbit, count: 3, at: [x, y]</code></td><td>Creatures: <code>:rabbit :tortoise :fish :hawk :fern :flower :lily</code>. Add a block for a divine brain (animals only).</td></tr>
-        <tr><td><code>pass</code> &nbsp;/&nbsp; <code>pass 7</code></td><td>Advance time one day / a week. The only way anything moves.</td></tr>
+        <tr><td><code>pass</code> &nbsp;/&nbsp; <code>pass 7</code></td><td>Advance time one day / a week. The only way anything moves — and the sky shifts with it.</td></tr>
+        <tr><td><code>sow 12</code> &nbsp;/&nbsp; <code>sow 6, on: :sand</code></td><td>Scatter seeds; each grows its terrain's native plant. See <em>Weather &amp; flora</em> in the Life section.</td></tr>
+        <tr><td><code>let_there_be :rain</code> <span style="white-space:nowrap;">(<code>:snow :storm :clear</code>)</span></td><td>Command the weather. The map header is the forecast.</td></tr>
         <tr><td><code>smite at: [x, y]</code> / <code>smite 5, 1</code> / <code>smite wolf</code></td><td>🔥 By place or by reference — see <em>Targeting &amp; smiting</em>. Kills what it lands on.</td></tr>
         <tr><td><code>unmake :lake</code> / <code>unmake "Mirkwood"</code> / <code>unmake herd</code></td><td>Remove by kind, by name, by reference, or by array. Kind/name act only when exactly one thing matches — ambiguity lists candidates. Land reverts to plains.</td></tr>
         <tr><td><code>eden!</code> <span style="white-space:nowrap;">(<code>width:</code>/<code>height:</code> optional)</span></td><td>A new world, pre-filled: terrain, animals, plants, life unlocked. Built with the same spawns you'd type yourself.</td></tr>
@@ -388,6 +493,9 @@ You are a god. Type `powers` to see your abilities.</span></pre>
         <tr><td><code>world.at(x, y)</code></td><td>Inspect one tile — terrain, coordinates, owner.</td></tr>
         <tr><td><code>world.features</code></td><td>Everything you've made, as an array of live objects.</td></tr>
         <tr><td><code>world.animals</code> &nbsp;/&nbsp; <code>world.rabbits</code></td><td>Fauna, flora (<code>world.plants</code>), or any species by plural. <code>world.day</code> is the clock.</td></tr>
+        <tr><td><code>chronicle</code> &nbsp;/&nbsp; <code>chronicle!</code></td><td>The world's history: every act, dated. Bare form prints recent acts; the bang writes <code>terra-chronicle.html</code> — an illuminated scripture with a map snapshot per act. <code>world.history</code> is the raw data.</td></tr>
+        <tr><td><code>inspire</code> &nbsp;/&nbsp; <code>inspire :all</code></td><td>Stuck? One random worked example, or the whole grimoire below.</td></tr>
+        <tr><td><code>guide</code> &nbsp;/&nbsp; <code>guide :smite</code></td><td>Interactive help: bare <code>guide</code> reads your world and suggests the next act; with a topic it opens that chapter. (Not <code>help</code> — IRB claims that word for its own REPL command.)</td></tr>
         <tr><td><code>powers</code></td><td>The in-terminal cheat sheet.</td></tr>
       </table>
     </div>
@@ -417,6 +525,11 @@ You are a god. Type `powers` to see your abilities.</span></pre>
         <p>No methods yet. It's a desert. It endures.</p>
         <p>The Dry Quiet, Sunscar, The Glass Flats.</p>
       </div>
+      <div class="card">
+        <h3><span class="glyph">🌾</span>Grassland</h3>
+        <p>Green grass on demand — paints 🟩 meadow, the same terrain life leaves behind, so plants and grazers treat it as home.</p>
+        <p>The Greensward, Longmeadow, The Rolling Sea.</p>
+      </div>
     </div>
     <p style="margin-top:1rem;">Every creation also answers <code>.name</code>, <code>.name = "…"</code>, <code>.size</code>, <code>.center</code>, and <code>.tiles</code>.</p>
   </section>
@@ -443,9 +556,23 @@ You are a god. Type `powers` to see your abilities.</span></pre>
         <tr><td class="legend-emoji">🌿 <code>:fern</code></td><td>plains, forest</td><td>20%</td><td>12 days</td></tr>
         <tr><td class="legend-emoji">🌼 <code>:flower</code></td><td>plains</td><td>15%</td><td>8 days</td></tr>
         <tr><td class="legend-emoji">🪷 <code>:lily</code></td><td>water</td><td>15%</td><td>10 days</td></tr>
+        <tr><td class="legend-emoji">🌵 <code>:cactus</code></td><td>sand</td><td>5%</td><td>40 days</td></tr>
+        <tr><td class="legend-emoji">🍄 <code>:mushroom</code></td><td>forest</td><td>18%</td><td>6 days</td></tr>
       </table>
     </div>
-    <p style="margin-top:0.75rem;">Left alone, populations find their own equilibrium: spreading fills the land, lifespans clear it. <code>pass 30</code> and watch.</p>
+    <p style="margin-top:0.75rem;">Left alone, populations find their own equilibrium: spreading fills the land, lifespans clear it. <code>pass 30</code> and watch. Or skip the placement decisions entirely: <code>sow 12</code> scatters seeds and lets each terrain grow its native — <code>sow 6, on: :sand</code> to target one biome. Seeds landing on stone are lost, and the log says how many.</p>
+
+    <h3 style="font-size:1.1rem; margin:1.5rem 0 0.5rem;">Weather — the sky has moods</h3>
+    <p>The map header is the forecast. Skies shift on their own as days pass (sticky — most days hold), or bend to a word: <code>let_there_be :rain</code> / <code>:snow</code> / <code>:storm</code> / <code>:clear</code>. <code>world.weather</code> asks directly.</p>
+    <div class="table-scroll">
+      <table>
+        <tr><th>Sky</th><th>Effect while it lasts</th></tr>
+        <tr><td>☀️ clear</td><td>The baseline. Nothing special — enjoy it.</td></tr>
+        <tr><td>🌧️ rain</td><td>Plants spread at double chance. Green things love it.</td></tr>
+        <tr><td>❄️ snow</td><td>Plants pause entirely (they still age). Animals don't mind.</td></tr>
+        <tr><td>⛈️ storm</td><td>Wild lightning may scorch a random tile each day — and it kills what stands there, remains and all. Nature's smite, aimed by no one.</td></tr>
+      </table>
+    </div>
 
     <h3 style="font-size:1.1rem; margin:1.5rem 0 0.5rem;">Divine brains — blocks as behavior</h3>
     <p>A block handed to <code>spawn</code> replaces an animal's instinct entirely; Terra calls it once per day with the animal itself. This is the Ruby block in its natural role: behavior as an argument.</p>
@@ -465,7 +592,7 @@ You are a god. Type `powers` to see your abilities.</span></pre>
         <tr><th>Event</th><th>What actually happens</th></tr>
         <tr><td>Plant reaches its lifespan</td><td>It dies quietly and vanishes — no corpse, the tile simply shows terrain again. (Its offspring usually outlive it.)</td></tr>
         <tr><td>Animal grows old</td><td>Nothing. Animals are currently immortal — nothing hunts, nothing starves. Food chains are Level 3's problem.</td></tr>
-        <tr><td><code>smite at: [x, y]</code></td><td>The tile scorches and anything standing on it dies, by name, in the log.</td></tr>
+        <tr><td><code>smite at: [x, y]</code></td><td>The tile scorches, anything standing on it dies by name in the log — and leaves 💀 remains that fade after ~2 days of passed time.</td></tr>
         <tr><td><code>unmake lake</code></td><td>The feature's tiles revert to <strong>plains</strong> — water never replaces land; water only exists where a lake does. Tiles another feature claimed later stay theirs.</td></tr>
         <tr><td><code>unmake rabbit</code> / <code>unmake herd</code></td><td>Returns to dust, single or plural. Removal is instant; no time needs to pass.</td></tr>
       </table>
@@ -542,6 +669,18 @@ You are a god. Type `powers` to see your abilities.</span></pre>
 <span class="p">&gt;&gt;</span> spawn(:wolf) { |w| w.hop_toward :forest }   <span class="out"># brains work on your species too</span></pre>
     </div>
     <p>Animal knobs: <code>habitat:</code> (<code>:land</code> / <code>:water</code> / <code>:air</code>) and <code>speed:</code> (tiles per day). Plant knobs: <code>grows_on:</code> (terrain list), <code>spread:</code> (0–1 chance per day), <code>lifespan:</code> (days).</p>
+
+    <h3 style="font-size:1.1rem; margin:1.5rem 0 0.5rem;">Write the scripture</h3>
+    <p>Every act — genesis, spawns, smitings, the passing of days, even <code>freeze</code> itself — is recorded with a map snapshot. <code>chronicle</code> prints the recent past; <code>chronicle!</code> renders the whole history to <code>terra-chronicle.html</code>, an illuminated page you can open in a browser or keep as a memorial to a frozen world. Under the hood it's ERB — the same stdlib templating Rails views are made of; read <code>lib/terra/chronicle.html.erb</code> to see Ruby woven into markup.</p>
+    <div class="term">
+      <div class="term-bar"><span class="title">irb — terra</span><button class="copy" data-cmd="chronicle!">copy</button></div>
+      <pre><span class="p">&gt;&gt;</span> chronicle
+<span class="out">Day   0 — 🌊 Lake "Mirrormere" forms — 5 tiles near (5, 1)
+Day   5 — ⏳ 5 days pass (+14 souls)
+Day   5 — ⚡ Lightning strikes (3, 3) — 🌿 The smite claims the fern.</span>
+<span class="p">&gt;&gt;</span> chronicle!
+<span class="out">📜 The chronicle is written: …/Terra/terra-chronicle.html</span></pre>
+    </div>
 
     <h3 style="font-size:1.1rem; margin:1.5rem 0 0.5rem;">Copy-ready menagerie</h3>
     <p>Click a glyph to copy it, paste it into an <code>ordain</code>. Suggested habitats are just that — you're the god here.</p>
@@ -622,13 +761,15 @@ You are a god. Type `powers` to see your abilities.</span></pre>
     <div class="table-scroll">
       <table>
         <tr><th>Glyph</th><th>Terrain</th><th>How it happens</th></tr>
-        <tr><td class="legend-emoji">⬛</td><td>void</td><td>The world before light.</td></tr>
-        <tr><td class="legend-emoji">🟩</td><td>plains</td><td>What light makes. The blank canvas.</td></tr>
+        <tr><td class="legend-emoji">⬛</td><td>void / darkness</td><td>Before light — or after <code>let_there_be :darkness</code>.</td></tr>
+        <tr><td class="legend-emoji">🟫</td><td>plains</td><td>Barren earth. What light makes; the blank canvas.</td></tr>
+        <tr><td class="legend-emoji">🟩</td><td>meadow</td><td>What life leaves. Any earth a plant takes root in turns green — and stays green after the plant dies. The land remembers.</td></tr>
         <tr><td class="legend-emoji">🌊 🧊</td><td>water / ice</td><td><code>spawn :lake</code>, then <code>freeze!</code> / <code>thaw!</code></td></tr>
         <tr><td class="legend-emoji">⛰️ 🌋</td><td>mountain / volcano</td><td><code>spawn :mountain</code>, then <code>erupt!</code></td></tr>
         <tr><td class="legend-emoji">🌲</td><td>forest</td><td><code>spawn :forest</code>; spreads with <code>grow!</code></td></tr>
         <tr><td class="legend-emoji">🟨</td><td>sand</td><td><code>spawn :desert</code></td></tr>
         <tr><td class="legend-emoji">🔥</td><td>scorched</td><td><code>smite</code>, or standing too near an eruption.</td></tr>
+        <tr><td class="legend-emoji">💀</td><td>remains</td><td>Where something was smitten. Fades after a couple of days pass.</td></tr>
         <tr><td class="legend-emoji">🐇🌿…</td><td>creatures</td><td>Drawn on top of terrain; the tally line under the map counts them.</td></tr>
       </table>
     </div>

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Terra — A Chronicle</title>
+<style>
+  /* One deliberate theme: an illuminated manuscript of the void. */
+  :root {
+    --ground: #0F140F;
+    --panel: #182017;
+    --ink: #F2F5EC;
+    --ink-soft: #BCC8AE;
+    --line: #2F3B2B;
+    --sun: #EBC45C;
+    --water: #96C4E9;
+    --term-bg: #0C1013;
+  }
+  * { margin: 0; box-sizing: border-box; }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif;
+    line-height: 1.6;
+    font-size: 17px;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 3.5rem 1.5rem 5rem; }
+  .label {
+    font-family: system-ui, sans-serif;
+    font-size: 0.72rem; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--sun);
+  }
+  h1 { font-size: clamp(2.2rem, 6vw, 3.2rem); font-weight: 400; letter-spacing: 0.24em; margin: 0.5rem 0; }
+  .subtitle { font-style: italic; color: var(--ink-soft); margin-bottom: 3rem; }
+  .entry { display: grid; grid-template-columns: 5.5rem 1fr; gap: 0 1rem; margin-bottom: 1.4rem; }
+  .entry .day {
+    color: var(--sun); font-variant-numeric: tabular-nums;
+    font-family: system-ui, sans-serif; font-size: 0.78rem; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase; padding-top: 0.2rem;
+    text-align: right;
+  }
+  .entry .note { color: var(--ink); }
+  .entry .map {
+    grid-column: 2;
+    background: var(--term-bg);
+    border-radius: 6px;
+    padding: 0.9rem 1rem;
+    margin-top: 0.6rem;
+    overflow-x: auto;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.85rem; line-height: 1.6;
+    color: var(--ink-soft);
+    letter-spacing: 0.05em;
+  }
+  footer {
+    border-top: 1px solid var(--line);
+    margin-top: 3rem; padding-top: 1.25rem;
+    color: var(--ink-soft); font-size: 0.88rem; font-style: italic;
+  }
+  @media (max-width: 560px) { .entry { grid-template-columns: 1fr; } .entry .day { text-align: left; } .entry .map { grid-column: 1; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="label">The Chronicle of a World</p>
+    <h1>✨ T E R R A</h1>
+    <p class="subtitle">
+      As witnessed through day <%= world.day %> —
+      <%= world.features.size %> landforms, <%= world.animals.count %> animals,
+      <%= world.plants.count %> plants endure.
+      <%- if world.frozen? -%>
+      <br>🧊 This world ended frozen in time.
+      <%- end -%>
+    </p>
+  </header>
+
+  <%- previous_map = nil -%>
+  <%- world.history.each do |entry| -%>
+  <div class="entry">
+    <div class="day">Day <%= entry[:day] %></div>
+    <div class="note"><%= h(entry[:note]) %></div>
+    <%- if entry[:map] != previous_map -%>
+    <pre class="map"><%= h(entry[:map]) %></pre>
+    <%- end -%>
+    <%- previous_map = entry[:map] -%>
+  </div>
+  <%- end -%>
+
+  <footer>
+    Written by <code>chronicle!</code> on <%= Time.now.strftime("%Y-%m-%d at %H:%M") %> ·
+    <%= world.history.size %> recorded acts · Terra, the IRB god game.
+  </footer>
+</div>
+</body>
+</html>

@@ -6,7 +6,8 @@ whatever your expressions return.
 ## Play
 
 ```sh
-bin/terra
+bin/terra          # terminal
+ruby bin/play.rb   # same game as a plain Ruby script — use this for RubyMine's play button
 ```
 
 Then, as is tradition:
@@ -60,11 +61,19 @@ lib/terra/being.rb     base class for living things (tick/age/die!)
 lib/terra/animal.rb    🐇🐢🐟🦅 habitats, speed, wander/hop_toward, divine brains
 lib/terra/plant.rb     🌿🌼🪷 spread, lifespan, quiet deaths
 lib/terra/godhood.rb   the top-level god commands (extended onto main)
+lib/terra/cartographer.rb    all presentation — World#render delegates here
+lib/terra/species_lookup.rb  world.rabbits etc. — a method_missing mixin (Rails-concern style)
+lib/terra/chronicle.rb + chronicle.html.erb   world history → standalone HTML (stdlib ERB)
+test/                  minitest suite — run with `rake` from Terra/
 ```
+
+Every act is recorded: `chronicle` prints the story so far, `chronicle!` renders
+it to `terra-chronicle.html` with a map snapshot per act. `world.history` is the
+raw array, queryable like everything else.
 
 ## Roadmap
 
 - **Level 1 — Genesis** ✅: terrain, attributes, smiting
-- **Level 2 — Life** ✅ (you are here): `let_there_be :life`, tick-based time via `pass`, creatures with block-defined brains
+- **Level 2 — Life** ✅ (you are here): `let_there_be :life`, tick-based time via `pass`, creatures with block-defined brains, terrain-aware `sow`, weather (☀️🌧️❄️⛈️ — the map header is the forecast)
 - **Level 3 — Providence**: Enumerable queries as divine power (`world.animals.select(&:hungry)...`)
 - **Level 4 — Godhood**: reopen classes mid-game; rabbits learn to fly

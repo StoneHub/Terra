@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Terra
   # Moving life. Each day an animal follows its instinct (wander) unless a
   # god handed it a brain — a block that runs once per day in its place.
@@ -20,9 +22,9 @@ module Terra
     # What each habitat can walk on. Note fish cannot cross :ice — freeze a
     # lake and everything in it waits for a thaw that may never come.
     PASSABLE = {
-      land:  %i[plains forest sand],
+      land:  %i[plains meadow forest sand],
       water: %i[water],
-      air:   %i[plains forest sand water ice mountain volcano scorched],
+      air:   %i[plains meadow forest sand water ice mountain volcano scorched],
     }.freeze
 
     attr_accessor :brain

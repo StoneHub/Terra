@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Terra
   # The god powers. Terra.genesis `extend`s this onto IRB's top-level object,
   # so everything here is callable bare at the prompt: `spawn :lake`, `pass`.
@@ -10,20 +12,280 @@ module Terra
 
     def world = Godhood.world
 
+    # The illustrated HTML manual that ships next to the game.
+    COMPANION = File.expand_path("../../companion.html", __dir__)
+
+    # Open the companion in the default browser. The opener is injectable
+    # (a lambda default!) so tests can spy on it without launching Safari.
+    def companion(opener: ->(path) { system("open", path) })
+      return puts("📖 The companion is missing — expected at #{COMPANION}") unless File.exist?(COMPANION)
+
+      if opener.call(COMPANION)
+        puts "📖 The companion opens in your browser."
+      else
+        puts "📖 Open it yourself:  file://#{COMPANION}"
+      end
+      nil
+    end
+
+    # Complete, copy-paste-safe vignettes for gods who are stuck.
+    GRIMOIRE = [
+      { title: "The Pilgrimage", lore: "A rabbit with divine purpose.",
+        lines: ['pilgrim = spawn(:rabbit) { |r| r.hop_toward :water }',
+                'pass 10',
+                'pilgrim   # where did faith take it?'] },
+      { title: "Fimbulwinter", lore: "Freeze every lake at once. The fish wait, patient, trapped.",
+        lines: ['world.lakes.each(&:freeze!)',
+                'pass 5    # nothing swims',
+                'world.lakes.each(&:thaw!)'] },
+      { title: "Mirkwood Rising", lore: "Plant one wood, let it swallow the map.",
+        lines: ['woods = spawn :forest, name: "Mirkwood"',
+                '3.times { woods.grow! }'] },
+      { title: "The Census", lore: "A god should know what it governs.",
+        lines: ['world.beings.group_by(&:kind).transform_values(&:count)',
+                'world.animals.max_by(&:age)   # the elder'] },
+      { title: "The Reckoning", lore: "Judgment day for everything past its fifth year.",
+        lines: ['elders = world.animals.select { |a| a.age > 5 }',
+                'smite elders'] },
+      { title: "Nightfall", lore: "Darkness is a pause; freeze is an ending. Feel the difference.",
+        lines: ['let_there_be :darkness',
+                'pass 3    # refused — time needs light',
+                'let_there_be :light   # everything exactly as it was'] },
+      { title: "The Long Silence", lore: "Walk away. See what the world does without you.",
+        lines: ['pass 30',
+                'chronicle'] },
+      { title: "A New Predator", lore: "Ordain it, arm it, aim it at the woods.",
+        lines: ['ordain :wolf, emoji: "🐺", habitat: :land, speed: 3',
+                'spawn(:wolf, count: 2) { |w| w.hop_toward :forest }',
+                'pass 7'] },
+      { title: "Doomsday", lore: "End a world properly: freeze it, memorialize it, move on.",
+        lines: ['chronicle!   # write the scripture FIRST',
+                'world.freeze',
+                'big_bang! width: 20, height: 12'] },
+      # ---- Great Works: multi-step builds ----
+      { title: "The Prairie World", lore: "A living grassland from nothing, in seven lines.",
+        lines: ['big_bang! width: 20, height: 12',
+                'let_there_be :light',
+                'terraform :meadow',
+                'spawn :lake, size: 3',
+                'let_there_be :life',
+                'sow 20',
+                'pass 30'] },
+      { title: "The Archipelago", lore: "Drown the world, then raise islands in it.",
+        lines: ['big_bang! width: 20, height: 12',
+                'let_there_be :light',
+                'terraform :water',
+                'spawn :grassland, size: 2   # an island',
+                'spawn :grassland, size: 2   # another',
+                'let_there_be :life',
+                'spawn :fish, count: 4',
+                'spawn :hawk',
+                'pass 20'] },
+      { title: "The Wolf Winter", lore: "Predators in the pines while nothing grows.",
+        lines: ['eden!',
+                'ordain :wolf, emoji: "🐺", habitat: :land, speed: 3',
+                'spawn(:wolf, count: 3) { |w| w.hop_toward :forest }',
+                'let_there_be :snow',
+                'pass 15',
+                'chronicle'] },
+      { title: "The Rain Garden", lore: "Wet skies, green scars — then have the world write it down.",
+        lines: ['eden!',
+                'sow 20',
+                'let_there_be :rain',
+                'pass 20',
+                'chronicle!'] },
+    ].freeze
+
+    # Chapters for `guide :topic`. (Named `guide`, not `help` — IRB claims
+    # `help` as its own REPL command before our method ever gets a look.)
+    GUIDEBOOK = {
+      spawn: <<~TXT,
+        spawn — bring things into being. Returns the thing; hold it.
+          spawn :lake, at: [4, 3], size: 3, name: "Mirrormere"   (all kwargs optional)
+          landforms: :lake :mountain :forest :desert :grassland (🌾 = green grass)
+          spawn :rabbit, count: 5              creatures need `let_there_be :life`
+          spawn(:rabbit) { |r| r.wander }      a block becomes its brain (parens!)
+        terraform :meadow — repaint every barren 🟫 tile at once (:sand, :water, …)
+      TXT
+      smite: <<~TXT,
+        smite — by place or by thing. Leaves 💀 remains for ~2 days.
+          smite at: [3, 4]  /  smite 3, 4      the tile; splash damage; can miss
+          smite wolf  /  smite herd            a reference never misses
+          smite :tortoise                      by kind — only if exactly one matches
+      TXT
+      unmake: <<~TXT,
+        unmake — removal without wrath. Land reverts to barren 🟫 plains.
+          unmake :forest / unmake "Mirkwood"   kind or name; one match only
+          unmake world.features.last           references are always precise
+          unmake herd                          arrays work
+      TXT
+      pass: <<~TXT,
+        pass — the only clock. Nothing moves while you watch.
+          pass          one day       pass 7        a week
+          world.day     the calendar  chronicle     what happened
+      TXT
+      sow: <<~TXT,
+        sow — scatter seeds; the terrain decides what grows.
+          sow 12                     🌿🌼 grassland · 🍄 forest · 🌵 sand · 🪷 water
+          sow 6, on: :sand           only the desert
+        Seeds on stone (or on another plant) are lost — the note says how many.
+      TXT
+      weather: <<~TXT,
+        weather — the sky shifts as days pass; the map header IS the forecast.
+          ☀️ clear   🌧️ rain (plants spread ×2)   ❄️ snow (plants pause)
+          ⛈️ storm — wild lightning may scorch a tile and kill what stands there
+          let_there_be :rain / :snow / :storm / :clear     command it yourself
+          world.weather                                    ask it
+      TXT
+      brains: <<~TXT,
+        brains — a block replaces instinct, runs once per creature-day.
+          spawn(:rabbit) { |r| r.hop_toward :water }        brace form NEEDS parens
+          spawn :hawk do |h| h.hop_toward [0, 0] end        do…end doesn't
+          verbs: wander · hop_toward(:forest / [x, y]) · stay · nearest(:water) · age · tile
+      TXT
+      ordain: <<~TXT,
+        ordain — invent a species (session-only; edit animal.rb/plant.rb to keep it).
+          ordain :wolf, emoji: "🐺", habitat: :land, speed: 3
+          ordain :cactus, emoji: "🌵", grows_on: [:sand], spread: 0.05, lifespan: 40
+      TXT
+      targeting: <<~TXT,
+        targeting — the REPL is your radar; every echo shows coords.
+          world.animals / world.rabbits        collections (plural of any species)
+          world.at(5, 1)                       who's standing there
+          world.animals.select { |a| a.near?(lake) }        Enumerable is the aim
+          lost a reference?  world.features.find { |f| f.name == "Mirkwood" }  or  _
+      TXT
+      chronicle: <<~TXT,
+        chronicle — the world writes its own scripture.
+          chronicle           recent acts       chronicle!    the illuminated HTML
+          world.history       raw entries: { day:, note:, map: }
+      TXT
+      darkness: <<~TXT,
+        darkness — the reversible night. let_there_be :darkness hides the world
+        (all ⬛) and time refuses to pass; let_there_be :light restores it exactly.
+        Compare :freeze — a boolean pauses, a frozen object ends.
+      TXT
+      freeze: <<~TXT,
+        freeze — world.freeze is Ruby's real Object#freeze: permanent. All ice,
+        all powers refused, no undo. chronicle! still works (the history Array
+        was never frozen). big_bang! is the only mercy.
+      TXT
+      eden: <<~TXT,
+        eden! — a ready-made world: light, land, life, day 0. Then edit it:
+        unmake what displeases you, spawn what's missing, pass to let it live.
+        Takes width:/height: like big_bang!.
+      TXT
+    }.freeze
+
+    # Interactive help: bare `guide` reads the world and says where you
+    # stand; `guide :smite` opens a chapter.
+    def guide(topic = nil)
+      return puts(GUIDEBOOK[topic] || "No chapter on #{topic.inspect}. Chapters: #{GUIDEBOOK.keys.map(&:inspect).join(' ')}") if topic
+
+      puts "━━━ WHERE YOU STAND ━━━"
+      situation.each { |line| puts line }
+      puts
+      puts "━━━ CHAPTERS ━━━"
+      puts "guide #{GUIDEBOOK.keys.map(&:inspect).join(' · guide ')}"
+      puts "(powers = the full sheet · inspire = a ritual to copy)"
+      nil
+    end
+
+    # One vignette at random; inspire :all for the whole grimoire.
+    def inspire(which = nil)
+      if which == :all
+        GRIMOIRE.each { |v| print_vignette(v) }
+      else
+        print_vignette(GRIMOIRE.sample)
+        puts "\n(inspire again for another · inspire :all for the whole grimoire)"
+      end
+      nil
+    end
+
     def let_there_be(what)
       return frozen_lament if world.frozen?
 
       case what
       when :light
+        return puts("The light already shines.") if world.lit?
         world.illuminate!
         puts "And there was light. 🌅"
         world.behold!
+      when :darkness
+        return puts("The dark is already absolute.") unless world.lit?
+        world.benight!
+        puts "You withdraw the light. The world is not gone — only unseen."
+        world.behold!
       when :life
         summon_life
+      when :rain, :snow, :storm, :clear
+        return puts("The sky needs a world beneath it. First: let_there_be :light") unless world.lit?
+        world.weather = what
+        puts "The sky obeys. #{World::WEATHER.fetch(what)}"
+        world.behold!
       else
-        puts "The void does not understand #{what.inspect}. Perhaps :light? Or, later, :life?"
+        puts "The void does not understand #{what.inspect}. " \
+             "It knows :light, :darkness, :life — and the skies: :rain, :snow, :storm, :clear."
         nil
       end
+    end
+
+    # Repaint every remaining tile of barren earth (:plains) as the given
+    # terrain. Claimed and grown land is untouched — this fills the empty
+    # spaces between your works.
+    def terraform(terrain)
+      return frozen_lament if world.frozen?
+      return puts("Terraforming needs light. First: let_there_be :light") unless world.lit?
+      return puts("Barren ground is already its own nature.") if terrain == :plains
+
+      unless Tile::EMOJI.key?(terrain) && terrain != :void
+        return puts("The land refuses #{terrain.inspect}. It knows: " \
+                    "#{(Tile::EMOJI.keys - %i[void plains]).map(&:inspect).join(', ')}")
+      end
+
+      barren = world.tiles.select { |t| t.terrain == :plains }
+      return puts("No barren ground remains — every tile is claimed or grown.") if barren.empty?
+
+      barren.each { |t| t.terrain = terrain }
+      world.record!("#{Tile::EMOJI.fetch(terrain)} The god terraforms — #{barren.size} barren tiles become #{terrain}")
+      world.behold!
+      puts "#{barren.size} tiles of barren earth become #{terrain}."
+      nil
+    end
+
+    # Scatter seeds across the world; each takes root as whatever species is
+    # native to the terrain it lands on — cactus on sand, lily on water.
+    # Seeds landing on stone (or on another plant) are simply lost.
+    def sow(count = 8, on: nil)
+      return frozen_lament if world.frozen?
+      return puts("Seeds need light. First: let_there_be :light") unless world.lit?
+      return puts("Seeds need life itself. First: let_there_be :life") unless world.life?
+
+      field = on ? world.tiles.select { |t| t.terrain == on } : world.tiles
+      return puts("No #{on.inspect} anywhere to sow.") if field.empty?
+
+      sown = Hash.new(0)
+      lost = 0
+      count.times do
+        tile = field.sample
+        natives = Plant::KINDS.select { |_, spec| spec[:grows_on].include?(tile.terrain) }.keys
+        taken = world.plants.any? { |p| p.pos == [tile.x, tile.y] }
+        if natives.empty? || taken
+          lost += 1
+          next
+        end
+        kind = natives.sample
+        world.breathe(kind, at: [tile.x, tile.y], record: false)
+        sown[kind] += 1
+      end
+
+      tally = sown.map { |kind, n| "#{Plant::KINDS.fetch(kind)[:emoji]}×#{n}" }.join(" ")
+      note = "🌱 The god scatters #{count} seeds — #{tally.empty? ? 'none take root' : tally}"
+      note += " (#{lost} fall on stone)" if lost.positive?
+      world.record!(note)
+      world.behold!
+      puts note
+      world.plants.last(sown.values.sum)
     end
 
     # Keyword args with defaults — Ruby's version of Kotlin named/default
@@ -113,12 +375,37 @@ module Terra
         end
       end
 
+      note = at ? "⚡ Lightning strikes (#{at.join(', ')})" : "⚡ Lightning falls"
+      note += " — #{epitaphs.join(' · ')}" if epitaphs.any?
+      world.record!(note)
       world.behold!
       puts epitaphs.join("\n") unless epitaphs.empty?
       at ? world.at(*at) : nil
     end
 
     def behold = world
+
+    # The story so far, in the terminal.
+    def chronicle(last: 12)
+      entries = world.history.last(last)
+      return puts("Nothing has happened yet. Make something.") if entries.empty?
+
+      puts "…#{world.history.size - entries.size} earlier acts…" if world.history.size > entries.size
+      entries.each { |e| puts "Day #{e[:day].to_s.rjust(3)} — #{e[:note]}" }
+      puts "(chronicle! writes the illuminated HTML version)"
+      nil
+    end
+
+    # The story so far, as a page. Works even on a frozen world — the
+    # history Array was never frozen, only the world holding it.
+    def chronicle!(path: "terra-chronicle.html")
+      return puts("Nothing has happened yet. Make something worth recording.") if world.history.empty?
+
+      file = Chronicle.write(world, path: path)
+      puts "📜 The chronicle is written: #{File.expand_path(file)}"
+      puts "   open it:  open #{file}"
+      nil
+    end
 
     # The only escape from a frozen world: abandon it. Rebinding
     # Godhood.world orphans the old World object entirely — frozen objects
@@ -188,6 +475,7 @@ module Terra
       end
 
       epitaphs = resolved.filter_map { |t| unmake_one(t) }
+      world.record!("🕳️ #{epitaphs.join(' · ')}") if epitaphs.any?
       world.behold! if epitaphs.any?
       puts (epitaphs + notes).join("\n") if epitaphs.any? || notes.any?
       nil
@@ -217,6 +505,7 @@ module Terra
         return puts("Give it a nature: habitat: :land/:water/:air (animal) or grows_on: [:plains] (plant).")
       end
       puts "   spawn #{kind.inspect} awaits. (Session-only — edit lib/terra/animal.rb or plant.rb to make it eternal.)"
+      world.record!("📖 #{emoji} The #{kind} is ordained into the book of species")
       nil
     end
 
@@ -229,7 +518,10 @@ module Terra
 
         ━━━ LEVEL 1: GENESIS ━━━
         let_there_be :light                              begin creation
+        let_there_be :darkness                           withdraw it — a reversible night
         spawn :lake, at: [4, 3], size: 2, name: "…"      also :mountain :forest :desert
+        spawn :grassland                                 🌾 green grass (:meadow) on demand
+        terraform :meadow                                repaint ALL barren 🟫 — any terrain
         smite at: [x, y] / smite 5, 1                    🔥 the place — splash damage
         smite wolf / smite herd                          🔥 the thing — never misses
         unmake :lake / unmake "Mirkwood"                 by kind or name (one match only)
@@ -237,37 +529,45 @@ module Terra
         big_bang! width: 20, height: 12                  begin again — bigger, if you ask
         eden! width: 16, height: 10                      a ready-made world, yours to edit
         world / behold      the map                      world.at(x, y)   one tile
-        world.features      everything you have made
+        world.features      everything you have made     world.history    every recorded act
+        chronicle / chronicle!                           the story so far / written as HTML
+        inspire / inspire :all                           a worked example when you're stuck
+        guide / guide :smite                             where you stand + chapters of help
+        companion                                        open the illustrated HTML manual
 
         Every spawn RETURNS the thing — hold it and poke it:
           lake = spawn :lake        lake.name = "Mirrormere"
           lake.freeze!  lake.thaw!  mountain.erupt!  forest.grow!
       SHEET
 
-      if world.life?
-        puts <<~SHEET
-          ━━━ LEVEL 2: LIFE 🔓 ━━━
-          spawn :rabbit, count: 5     🐇 land, speed 2     spawn :fern     🌿 land, spreads
-          spawn :tortoise             🐢 land, speed 1     spawn :flower   🌼 plains, blooms
-          spawn :fish                 🐟 water only        spawn :lily     🪷 water
-          spawn :hawk                 🦅 flies anywhere
-          pass / pass 7               let days happen — animals roam, plants live & die
-          world.animals / world.plants                 everything alive, as arrays
-          world.rabbits / world.lilies / world.wolves  the plural of any species works
+      status = world.life? ? "🔓" : "🔒 sleeping — wake it: let_there_be :life"
+      puts <<~SHEET
+        ━━━ LEVEL 2: LIFE #{status} ━━━
+        let_there_be :life          wake the world; everything below needs it
+        spawn :rabbit, count: 5     🐇 land, speed 2     spawn :fern     🌿 land, spreads
+        spawn :tortoise             🐢 land, speed 1     spawn :flower   🌼 plains, blooms
+        spawn :fish                 🐟 water only        spawn :lily     🪷 water
+        spawn :hawk                 🦅 flies anywhere    spawn :cactus   🌵 :mushroom 🍄 too
+        sow 12 / sow 6, on: :sand   scatter seeds; each grows what its terrain allows
+                                    (🌿🌼 grassland · 🍄 forest · 🌵 sand · 🪷 water)
+        pass / pass 7               let days happen — animals roam, plants live & die
+        let_there_be :rain          command the sky: :rain :snow :storm :clear
+                                    (it also shifts on its own as days pass — the map
+                                     header IS the forecast; rain feeds plants, snow
+                                     stills them, storms throw wild lightning)
+        world.animals / world.plants                 everything alive, as arrays
+        world.rabbits / world.lilies / world.wolves  the plural of any species works
 
-          Divine brains — a block replaces instinct, runs once per day:
-            spawn(:rabbit) { |r| r.hop_toward :water }
-            verbs: r.wander · r.hop_toward(:forest) · r.hop_toward([x, y]) · r.stay
+        Divine brains — a block replaces instinct, runs once per day:
+          spawn(:rabbit) { |r| r.hop_toward :water }
+          verbs: r.wander · r.hop_toward(:forest) · r.hop_toward([x, y]) · r.stay
 
-          Invent species — new entries in an open registry:
-            ordain :wolf, emoji: "🐺", habitat: :land, speed: 3
-            ordain :cactus, emoji: "🌵", grows_on: [:sand], spread: 0.05, lifespan: 40
+        Invent species — new entries in an open registry:
+          ordain :wolf, emoji: "🐺", habitat: :land, speed: 3
+          ordain :bramble, emoji: "🌾", grows_on: [:sand], spread: 0.05, lifespan: 40
 
-          🔒 Level 3: Providence — Enumerable as divine power
-        SHEET
-      else
-        puts "🔒 Level 2 sleeps. Wake it:  let_there_be :life"
-      end
+        🔒 Level 3: Providence — Enumerable as divine power
+      SHEET
       nil
     end
 
@@ -284,12 +584,34 @@ module Terra
       end
     end
 
+    # Reads world state and suggests the next sensible act.
+    def situation
+      return ["🧊 This world is frozen — permanently. Write chronicle!, then big_bang!."] if world.frozen?
+
+      if !world.lit?
+        return ["🌑 Darkness. The world waits beneath, intact.", "   → let_there_be :light"] if world.day.positive? || world.features.any?
+        return ["🌑 The void. Nothing exists yet.", "   → let_there_be :light   (or eden! to skip ahead)"]
+      end
+
+      lines = ["☀️  Day #{world.day} — #{world.features.size} landforms, " \
+               "#{world.animals.count} animals, #{world.plants.count} plants."]
+      lines << "   → spawn :lake / :mountain / :forest — shape the land" if world.features.empty?
+      lines << "   → let_there_be :life — the world is ready to breathe" unless world.life?
+      lines << "   → spawn :rabbit, count: 3 — life is unlocked but nothing lives" if world.life? && world.beings.empty?
+      lines << "   → pass 7 — you have creatures, but time has never moved" if world.beings.any? && world.day.zero?
+      lines << "   → all is well; pass some days, or inspire for mischief" if lines.one?
+      lines
+    end
+
+    def print_vignette(v)
+      puts "\n— #{v[:title]} —  #{v[:lore]}"
+      v[:lines].each { |l| puts "  #{l}" }
+    end
+
+    # Divine smites and natural storms share one bolt (World#lightning!);
+    # only the god's version gets epitaphs.
     def strike_tile(tile)
-      tile.scorch!
-      victims = world.beings.select { |b| b.x == tile.x && b.y == tile.y }
-      victims.each(&:die!)
-      world.beings.reject!(&:dead?)
-      victims.map { |v| "#{v.emoji} The smite claims the #{v.kind}." }
+      world.lightning!(tile).map { |v| "#{v.emoji} The smite claims the #{v.kind}." }
     end
 
     def birth!(width:, height:)
@@ -297,6 +619,7 @@ module Terra
       h = height.clamp(4, 30)
       puts "(The fabric of space stretches only so far: #{w}×#{h}.)" if [w, h] != [width, height]
       Godhood.world = World.new(width: w, height: h)
+      world.record!("✨ A universe is born — #{w} × #{h} of patient void")
     end
 
     def unmake_one(thing)

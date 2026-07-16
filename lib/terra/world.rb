@@ -1,14 +1,31 @@
+# frozen_string_literal: true
+
 module Terra
   # The grid, plus everything alive on it. Starts as void; `illuminate!` is
   # the big-bang switch, `bestow_life!` wakes Level 2. Time only moves when
   # `advance!` is called — between calls the world is a photograph.
+  #
+  # Presentation lives in Cartographer; plural lookups (world.rabbits) come
+  # from the SpeciesLookup mixin. This class is only simulation state.
   class World
+    include SpeciesLookup
+
     # Default canvas. Worlds are born with their size — there is no resizing
     # a live one. A god who wants more room asks big_bang! for it.
     DEFAULT_WIDTH  = 12
     DEFAULT_HEIGHT = 9
 
-    attr_reader :width, :height, :features, :beings, :day
+    # The sky's moods and their map-header glyphs. Weather shifts on its own
+    # as days pass (sticky — most days the sky stays as it was), or a god
+    # sets it directly with let_there_be :storm etc.
+    WEATHER = { clear: "☀️", rain: "🌧️", snow: "❄️", storm: "⛈️" }.freeze
+
+    attr_reader :width, :height, :features, :beings, :day, :history, :tiles, :weather
+
+    def unfreeze # anything is possible for God!
+      puts "A new creation!"
+      world = dup # a new creation. take that!
+    end
 
     def initialize(width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT)
       @width = width
@@ -16,11 +33,16 @@ module Terra
       @lit = false
       @life = false
       @day = 0
+      @weather = :clear
       @features = []
       @beings = []
+      @history = []
       @grid = Array.new(height) do |y|
         Array.new(width) { |x| Tile.new(x: x, y: y, world: self) }
       end
+      # Computed eagerly: the tile set never changes (only terrain does),
+      # and a lazy ||= would raise FrozenError on a frozen world.
+      @tiles = @grid.flatten
     end
 
     def lit?  = @lit
@@ -28,26 +50,70 @@ module Terra
 
     def illuminate!
       @lit = true
-      each_tile { |t| t.terrain = :plains if t.terrain == :void }
+      tiles.each { |t| t.terrain = :plains if t.terrain == :void }
+      record!("And there was light. 🌅")
       self
     end
 
     def bestow_life!
       @life = true
+      record!("🌱 The world drew breath — life stirs.")
+      self
+    end
+
+    # The reversible opposite of illuminate! — @lit is just a boolean, so
+    # darkness HIDES the world without destroying it. Compare `freeze`,
+    # the permanent version. Mutable state pauses; frozen state ends.
+    def benight!
+      @lit = false
+      record!("🌑 The light is withdrawn. Darkness covers the world.")
+      self
+    end
+
+    # A god may command the sky directly.
+    def weather=(kind)
+      raise ArgumentError, "the sky knows only #{WEATHER.keys.map(&:inspect).join(', ')}" unless WEATHER.key?(kind)
+
+      @weather = kind
+      record!("#{WEATHER.fetch(kind)} The sky turns to #{kind} at a word.")
+    end
+
+    # Natural lightning: scorch a tile, kill whatever stands there, leave
+    # remains. Returns the victims (divine smites reuse this and add the
+    # epitaphs; storms call it wordlessly).
+    def lightning!(tile)
+      tile.scorch!
+      victims = beings.select { |b| b.x == tile.x && b.y == tile.y }
+      victims.each(&:die!)
+      beings.reject!(&:dead?)
+      victims.reject { |v| v.is_a?(Remains) }.each do |v|
+        beings << Remains.new(world: self, x: v.x, y: v.y)
+      end
+      victims
+    end
+
+    # The chronicle: every act appends a dated entry with a map snapshot.
+    # Appending works even on a frozen world — freeze is shallow, and
+    # @history points at an ordinary (unfrozen) Array.
+    def record!(note)
+      history << { day: day, note: note, map: render }
+      nil
+    end
+
+    # Override the real Object#freeze so the moment enters the chronicle;
+    # `super` does the actual freezing, then we snapshot the icy result.
+    def freeze
+      super
+      record!("🧊 The god spoke `freeze`. Time stopped, forever.")
       self
     end
 
     # Returns nil when off-map — callers use `if tile = world.at(...)`.
     def at(x, y)
       return nil unless x.between?(0, width - 1) && y.between?(0, height - 1)
+
       @grid[y][x]
     end
-
-    def each_tile
-      @grid.each { |row| row.each { |tile| yield tile } }
-    end
-
-    def tiles = @grid.flatten
 
     # Diamond of tiles within Manhattan distance `radius`, clipped to the map.
     def tiles_near(x, y, radius)
@@ -62,80 +128,52 @@ module Terra
     def animals = beings.grep(Animal)
     def plants  = beings.grep(Plant)
 
-    # `world.rabbits`, `world.lilies`, `world.wolves` — the plural of any
-    # species is a method. This is `method_missing`: Ruby's last stop before
-    # NoMethodError, and how Rails once conjured find_by_name. Pair it with
-    # respond_to_missing? or tooling (and IRB completion) won't believe you.
-    def method_missing(name, *args, &blk)
-      kind = species_from_plural(name)
-      return beings.select { |b| b.kind == kind } if kind && args.empty?
-      super
-    end
-
-    def respond_to_missing?(name, include_private = false)
-      !species_from_plural(name).nil? || super
-    end
-
     # Bring `count` creatures of `kind` into the world. Returns the newborns
-    # (empty when the world has no hospitable ground for them).
-    def breathe(kind, at: nil, count: 1, brain: nil)
-      klass = Animal::KINDS.key?(kind) ? Animal : Plant
+    # (empty when the world has no hospitable ground for them). Fails loudly
+    # on unknown kinds — this is a public boundary; don't trust the caller.
+    def breathe(kind, at: nil, count: 1, brain: nil, record: true)
+      klass = if Animal::KINDS.key?(kind) then Animal
+              elsif Plant::KINDS.key?(kind) then Plant
+              else raise ArgumentError, "unknown species #{kind.inspect} — ordain it first"
+              end
+
       Array.new(count) do
         x, y = at || klass.cradle(world: self, kind: kind)
         next unless x
 
         being = klass.new(world: self, x: x, y: y, kind: kind, brain: brain)
-        @beings << being
+        beings << being
         being
-      end.compact
+      end.compact.tap do |born|
+        record!("#{born.first.emoji} #{born.size} × #{kind} arrive#{' (divine brain)' if brain}") if record && born.any?
+      end
     end
 
-    # One day per step: every being acts, then the dead are collected.
+    # One day per step: the sky shifts, every being acts, storms may strike,
+    # then the dead are collected.
     def advance!(days = 1)
+      before = beings.size
       days.times do
         @day += 1
-        @beings.dup.each(&:tick) # dup: plants seed children mid-walk
-        @beings.reject!(&:dead?)
+        @weather = WEATHER.keys.sample if rand > 0.6 # sticky skies
+        beings.dup.each(&:tick) # dup: plants seed children mid-walk
+        beings.reject!(&:dead?)
+        if @weather == :storm && rand < 0.25
+          struck = lightning!(tiles.sample)
+          record!("⛈️ Wild lightning finds the world#{" — it takes the #{struck.first.kind}" if struck.any?}")
+        end
       end
+      drift = beings.size - before
+      passage = days == 1 ? "1 day passes" : "#{days} days pass"
+      record!("⏳ #{passage}#{format(' (%+d souls)', drift) unless drift.zero?} — #{WEATHER.fetch(weather)} #{weather} skies")
       self
     end
 
-    def render
-      # `frozen?` here is Object#frozen? — the real thing. If a god calls
-      # `world.freeze` (Ruby's own immutability switch), time stops.
-      header = if frozen? then "🧊 Terra — frozen in time by `freeze`. Even gods cannot undo it."
-               elsif lit? then "☀️  Terra — day #{@day}"
-               else "🌑 The Void — darkness upon the face of the deep"
-               end
-      cols = "    " + (0...width).map { |x| x.to_s.ljust(2) }.join
-      occupied = @beings.group_by { |b| [b.x, b.y] }
-      rows = @grid.map.with_index do |row, y|
-        format("%2d  ", y) + row.map do |t|
-          next "🧊" if frozen?
-          occupied[[t.x, t.y]]&.last&.emoji || t.emoji
-        end.join
-      end
-      lines = [header, cols] + rows
-      lines << "    🐾 #{animals.count} animals · 🌱 #{plants.count} plants" if @beings.any?
-      lines.join("\n")
-    end
+    def render = Cartographer.new(self).render
 
     def behold! = puts(render)
 
     # `world` typed at the prompt echoes the whole map. See Tile#inspect for why.
     def inspect = render
-
-    private
-
-    # rabbits → rabbit, lilies → lily, wolves → wolf, tortoises → tortoise.
-    # Naive English, good enough for a bestiary.
-    def species_from_plural(name)
-      n = name.to_s
-      return nil unless n.end_with?("s")
-
-      [n.chomp("s"), n.chomp("es"), n.sub(/ies\z/, "y"), n.sub(/ves\z/, "f")]
-        .map(&:to_sym)
-        .find { |k| Animal::KINDS.key?(k) || Plant::KINDS.key?(k) }
-    end
   end
 end

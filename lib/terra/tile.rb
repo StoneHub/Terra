@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Terra
   # One square of the world. Dumb data: a terrain symbol, coordinates, and a
   # back-reference to whatever Feature claimed it (nil for wilderness).
@@ -6,7 +8,8 @@ module Terra
     # interned, compared by identity. Idiomatic for closed sets like this.
     EMOJI = {
       void:     "⬛",
-      plains:   "🟩",
+      plains:   "🟫", # barren earth — what light makes
+      meadow:   "🟩", # greened land — what life leaves behind
       water:    "🌊",
       ice:      "🧊",
       mountain: "⛰️",

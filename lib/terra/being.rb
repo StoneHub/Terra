@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Terra
   # Anything alive: it has a place, an age, and one action per day.
   # Subclasses (Animal, Plant) define `act`; the world calls `tick` on
@@ -49,5 +51,21 @@ module Terra
       [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]]
         .filter_map { |nx, ny| world.at(nx, ny) }
     end
+  end
+
+  # What a smite leaves behind: a skull that lingers a couple of days, then
+  # fades. It's a Being like any other — time is what removes it.
+  class Remains < Being
+    LINGER = 2
+
+    def initialize(world:, x:, y:)
+      super(world: world, x: x, y: y, kind: :remains)
+    end
+
+    def emoji = "💀"
+
+    def act = (die! if age >= LINGER)
+
+    def inspect = "💀 Remains at (#{x}, #{y}) — fading"
   end
 end

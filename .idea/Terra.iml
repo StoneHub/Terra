@@ -1,7 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="RUBY_MODULE" version="4">
   <component name="ModuleRunConfigurationManager">
-    <shared />
+    <shared>
+      <configuration default="false" name="Terra" type="RubyRunConfigurationType" factoryName="Ruby">
+        <module name="Terra" />
+        <RUBY_RUN_CONFIG NAME="RUBY_ARGS" VALUE="" />
+        <RUBY_RUN_CONFIG NAME="WORK DIR" VALUE="$MODULE_DIR$" />
+        <RUBY_RUN_CONFIG NAME="SHOULD_USE_SDK" VALUE="false" />
+        <RUBY_RUN_CONFIG NAME="ALTERN_SDK_NAME" VALUE="" />
+        <RUBY_RUN_CONFIG NAME="myPassParentEnvs" VALUE="true" />
+        <EXTENSION ID="BundlerRunConfigurationExtension" BUNDLE_MODE="AUTO" bundleExecEnabled="true" />
+        <EXTENSION ID="RubyCoverageRunConfigurationExtension" track_test_folders="true" runner="rcov" ENABLE_BRANCH_COVERAGE="true" ENABLE_FORKED_COVERAGE="true">
+          <COVERAGE_PATTERN ENABLED="true">
+            <PATTERN REGEXPS="/.rvm/" INCLUDED="false" />
+          </COVERAGE_PATTERN>
+        </EXTENSION>
+        <EXTENSION ID="org.jetbrains.plugins.ruby.rails.run.RailsRunConfigurationExtension" SCRATCH_USE_RAILS_RUNNER="false" />
+        <RUBY_RUN_CONFIG NAME="SCRIPT_PATH" VALUE="$MODULE_DIR$/bin/play.rb" />
+        <RUBY_RUN_CONFIG NAME="SCRIPT_ARGS" VALUE="" />
+        <method v="2" />
+      </configuration>
+    </shared>
   </component>
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
@@ -11,5 +30,11 @@
     </content>
     <orderEntry type="jdk" jdkName="ruby-4.0.5-p0" jdkType="RUBY_SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" scope="PROVIDED" name="erb (v6.0.1.1, ruby-4.0.5-p0) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="io-console (v0.8.2, ruby-4.0.5-p0) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="irb (v1.16.0, ruby-4.0.5-p0) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="psych (v5.3.1, ruby-4.0.5-p0) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="rdoc (v7.0.4, ruby-4.0.5-p0) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="reline (v0.6.3, ruby-4.0.5-p0) [gem]" level="application" />
   </component>
 </module>

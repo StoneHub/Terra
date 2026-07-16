@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Terra
   # A named landform occupying a blob of tiles: Lake, Mountain, Forest, Desert.
   #
@@ -47,6 +49,7 @@ module Terra
       @tiles = world.tiles_near(*center, radius)
       claim(@tiles)
       world.features << self
+      world.record!("#{title} forms — #{size} tiles near (#{center.join(', ')})")
     end
 
     def size = tiles.count
@@ -123,7 +126,7 @@ module Terra
         .flat_map { |t| [[t.x + 1, t.y], [t.x - 1, t.y], [t.x, t.y + 1], [t.x, t.y - 1]] }
         .filter_map { |x, y| world.at(x, y) }
         .uniq
-        .select { |t| t.terrain == :plains }
+        .select { |t| %i[plains meadow].include?(t.terrain) }
       frontier.each do |tile|
         tile.feature = self
         tile.terrain = :forest
@@ -137,5 +140,12 @@ module Terra
   class Desert < Feature
     manifest_as :desert, emoji: "🏜️", terrain: :sand,
                 names: ["The Dry Quiet", "Sunscar", "The Glass Flats"]
+  end
+
+  # Green grass on demand — paints :meadow, the same terrain life leaves
+  # behind, so sown/spreading plants treat it as home ground.
+  class Grassland < Feature
+    manifest_as :grassland, emoji: "🌾", terrain: :meadow,
+                names: ["The Greensward", "Longmeadow", "The Rolling Sea"]
   end
 end
