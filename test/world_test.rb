@@ -31,7 +31,7 @@ class WorldTest < Minitest::Test
   end
 
   def test_advance_moves_the_calendar_and_records
-    lit_world!
+    world.illuminate! # engine-level light: no god act, no charged day
     world.advance!(5)
     assert_equal 5, world.day
     assert(world.history.any? { |e| e[:note].include?("5 days pass") })

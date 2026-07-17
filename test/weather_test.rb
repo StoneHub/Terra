@@ -96,7 +96,7 @@ class WeatherTest < Minitest::Test
     center = world.at(5, 4)
     target = world.at(6, 4)
     [world.at(4, 4), world.at(5, 3), world.at(5, 5)].each { |tile| tile.terrain = :water }
-    victim = quietly { god.spawn :rabbit, at: [target.x, target.y] }
+    victim = quietly { god.spawn(:rabbit, at: [target.x, target.y]) { |r| r.stay } }
 
     world.lightning!(center)
     assert world.burning?(center)

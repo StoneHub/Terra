@@ -12,6 +12,21 @@ module Terra
 
     def world = Godhood.world
 
+    # THE LAW OF COST — acting IS spending time. Every successful act below
+    # charges days from this table the moment it completes; a refused act
+    # charges nothing. Observations (guide, powers, chronicle, behold…) are
+    # free: looking at the world never moves it. Costs live here as data so
+    # the game can be re-balanced without touching any mechanic.
+    TIME_COSTS = {
+      let_there_be: 1, spawn: 1, sow: 1, smite: 1, unmake: 1, ordain: 1,
+      terraform: 3,           # reshaping a continent is slow work
+      winter!: 2, spring!: 2, # the seasons turn on their own schedule
+    }.freeze
+
+    # Sentinel refuse! throws and enact swallows. A plain Object: all it
+    # needs is an identity nothing else shares (compare Kotlin's `object`).
+    REFUSED = Object.new
+
     # The illustrated HTML manual that ships next to the game.
     COMPANION = File.expand_path("../../companion.html", __dir__)
 
@@ -117,9 +132,12 @@ module Terra
           unmake herd                          arrays work
       TXT
       pass: <<~TXT,
-        pass — the only clock. Nothing moves while you watch.
+        pass — the deliberate clock. Acts already spend days on their own
+        (spawn 1 · sow 1 · smite 1 · terraform 3 · winter!/spring! 2);
+        pass is for when you want nothing but time itself to happen.
           pass          one day       pass 7        a week
           world.day     the calendar  chronicle     what happened
+        Only pass lets the sky drift — your own acts hold it steady.
       TXT
       sow: <<~TXT,
         sow — scatter seeds; the terrain decides what grows.
@@ -205,27 +223,25 @@ module Terra
     end
 
     def let_there_be(what)
-      return frozen_lament if world.frozen?
-
-      case what
-      when :light
-        return puts("The light already shines.") if world.lit?
-        world.illuminate!
-        puts "And there was light. 🌅"
-        world.behold!
-      when :life
-        summon_life
-      when :rain, :snow, :storm, :clear
-        return puts("The sky needs a world beneath it. First: let_there_be :light") unless world.lit?
-        if world.winter? && what != :snow
-          return puts("Winter holds the sky at :snow. Speak `spring!` before commanding another sky.")
+      enact(:let_there_be) do
+        case what
+        when :light
+          refuse!("The light already shines.") if world.lit?
+          world.illuminate!
+          puts "And there was light. 🌅"
+        when :life
+          summon_life
+        when :rain, :snow, :storm, :clear
+          refuse!("The sky needs a world beneath it. First: let_there_be :light") unless world.lit?
+          if world.winter? && what != :snow
+            refuse!("Winter holds the sky at :snow. Speak `spring!` before commanding another sky.")
+          end
+          world.weather = what
+          puts "The sky obeys. #{World::WEATHER.fetch(what)}"
+        else
+          refuse!("The void does not understand #{what.inspect}. " \
+                  "It knows :light, :life — and the skies: :rain, :snow, :storm, :clear.")
         end
-        world.weather = what
-        puts "The sky obeys. #{World::WEATHER.fetch(what)}"
-        world.behold!
-      else
-        puts "The void does not understand #{what.inspect}. " \
-             "It knows :light, :life — and the skies: :rain, :snow, :storm, :clear."
         nil
       end
     end
@@ -234,58 +250,58 @@ module Terra
     # terrain. Claimed and grown land is untouched — this fills the empty
     # spaces between your works.
     def terraform(terrain)
-      return frozen_lament if world.frozen?
-      return puts("Terraforming needs light. First: let_there_be :light") unless world.lit?
-      return puts("Barren ground is already its own nature.") if terrain == :plains
+      enact(:terraform) do
+        refuse!("Terraforming needs light. First: let_there_be :light") unless world.lit?
+        refuse!("Barren ground is already its own nature.") if terrain == :plains
 
-      unless Tile::EMOJI.key?(terrain) && terrain != :void
-        return puts("The land refuses #{terrain.inspect}. It knows: " \
-                    "#{(Tile::EMOJI.keys - %i[void plains]).map(&:inspect).join(', ')}")
+        unless Tile::EMOJI.key?(terrain) && terrain != :void
+          refuse!("The land refuses #{terrain.inspect}. It knows: " \
+                  "#{(Tile::EMOJI.keys - %i[void plains]).map(&:inspect).join(', ')}")
+        end
+
+        barren = world.tiles.select { |t| t.terrain == :plains }
+        refuse!("No barren ground remains — every tile is claimed or grown.") if barren.empty?
+
+        barren.each { |t| t.terrain = terrain }
+        world.record!("#{Tile::EMOJI.fetch(terrain)} The god terraforms — #{barren.size} barren tiles become #{terrain}")
+        puts "#{barren.size} tiles of barren earth become #{terrain}."
+        nil
       end
-
-      barren = world.tiles.select { |t| t.terrain == :plains }
-      return puts("No barren ground remains — every tile is claimed or grown.") if barren.empty?
-
-      barren.each { |t| t.terrain = terrain }
-      world.record!("#{Tile::EMOJI.fetch(terrain)} The god terraforms — #{barren.size} barren tiles become #{terrain}")
-      world.behold!
-      puts "#{barren.size} tiles of barren earth become #{terrain}."
-      nil
     end
 
     # Scatter seeds across the world; each takes root as whatever species is
     # native to the terrain it lands on — cactus on sand, lily on water.
     # Seeds landing on stone (or on another plant) are simply lost.
     def sow(count = 8, on: nil)
-      return frozen_lament if world.frozen?
-      return puts("Seeds need light. First: let_there_be :light") unless world.lit?
-      return puts("Seeds need life itself. First: let_there_be :life") unless world.life?
+      enact(:sow) do
+        refuse!("Seeds need light. First: let_there_be :light") unless world.lit?
+        refuse!("Seeds need life itself. First: let_there_be :life") unless world.life?
 
-      field = on ? world.tiles.select { |t| t.terrain == on } : world.tiles
-      return puts("No #{on.inspect} anywhere to sow.") if field.empty?
+        field = on ? world.tiles.select { |t| t.terrain == on } : world.tiles
+        refuse!("No #{on.inspect} anywhere to sow.") if field.empty?
 
-      sown = Hash.new(0)
-      lost = 0
-      count.times do
-        tile = field.sample
-        natives = Plant::KINDS.select { |_, spec| spec[:grows_on].include?(tile.terrain) }.keys
-        taken = world.plants.any? { |p| p.pos == [tile.x, tile.y] }
-        if natives.empty? || taken
-          lost += 1
-          next
+        sown = Hash.new(0)
+        lost = 0
+        count.times do
+          tile = field.sample
+          natives = Plant::KINDS.select { |_, spec| spec[:grows_on].include?(tile.terrain) }.keys
+          taken = world.plants.any? { |p| p.pos == [tile.x, tile.y] }
+          if natives.empty? || taken
+            lost += 1
+            next
+          end
+          kind = natives.sample
+          world.breathe(kind, at: [tile.x, tile.y], record: false)
+          sown[kind] += 1
         end
-        kind = natives.sample
-        world.breathe(kind, at: [tile.x, tile.y], record: false)
-        sown[kind] += 1
-      end
 
-      tally = sown.map { |kind, n| "#{Plant::KINDS.fetch(kind)[:emoji]}×#{n}" }.join(" ")
-      note = "🌱 The god scatters #{count} seeds — #{tally.empty? ? 'none take root' : tally}"
-      note += " (#{lost} fall on stone)" if lost.positive?
-      world.record!(note)
-      world.behold!
-      puts note
-      world.plants.last(sown.values.sum)
+        tally = sown.map { |kind, n| "#{Plant::KINDS.fetch(kind)[:emoji]}×#{n}" }.join(" ")
+        note = "🌱 The god scatters #{count} seeds — #{tally.empty? ? 'none take root' : tally}"
+        note += " (#{lost} fall on stone)" if lost.positive?
+        world.record!(note)
+        puts note
+        world.plants.last(sown.values.sum)
+      end
     end
 
     # Keyword args with defaults — Ruby's version of Kotlin named/default
@@ -294,37 +310,32 @@ module Terra
     # works without them. NB: this shadows Kernel#spawn (process launching)
     # at the prompt, which is exactly what we want.
     def spawn(kind, at: nil, size: 2, name: nil, count: 1, length: nil, width: nil, &brain)
-      return frozen_lament if world.frozen?
+      enact(:spawn) do
+        refuse!("🌑 The void swallows your creation. First: let_there_be :light") unless world.lit?
 
-      unless world.lit?
-        puts "🌑 The void swallows your creation. First: let_there_be :light"
-        return
-      end
+        if kind != :river && (!length.nil? || !width.nil?)
+          refuse!("`length:` and `width:` shape rivers only. Try: spawn :river, length: world.width, width: 2")
+        end
 
-      if kind != :river && (!length.nil? || !width.nil?)
-        return puts("`length:` and `width:` shape rivers only. Try: spawn :river, length: world.width, width: 2")
-      end
-
-      if (klass = Feature::REGISTRY[kind])
-        shape = { world: world, at: at, size: size, name: name }
-        shape[:length] = length unless length.nil?
-        shape[:width] = width unless width.nil?
-        feature = klass.create(**shape)
-        world.behold!
-        feature
-      elsif Animal::KINDS.key?(kind) || Plant::KINDS.key?(kind)
-        breathe_creature(kind, at: at, count: count, brain: brain)
-      else
-        puts "You know no #{kind.inspect}."
-        puts "Landforms: #{Feature::REGISTRY.keys.map(&:inspect).join(', ')}"
-        puts "Creatures (after let_there_be :life): " \
-             "#{(Animal::KINDS.keys + Plant::KINDS.keys).map(&:inspect).join(', ')}"
-        puts %(Or invent it: ordain #{kind.inspect}, emoji: "…", habitat: :land)
-        nil
+        if (klass = Feature::REGISTRY[kind])
+          shape = { world: world, at: at, size: size, name: name }
+          shape[:length] = length unless length.nil?
+          shape[:width] = width unless width.nil?
+          klass.create(**shape)
+        elsif Animal::KINDS.key?(kind) || Plant::KINDS.key?(kind)
+          breathe_creature(kind, at: at, count: count, brain: brain)
+        else
+          puts "You know no #{kind.inspect}."
+          puts "Landforms: #{Feature::REGISTRY.keys.map(&:inspect).join(', ')}"
+          puts "Creatures (after let_there_be :life): " \
+               "#{(Animal::KINDS.keys + Plant::KINDS.keys).map(&:inspect).join(', ')}"
+          refuse!(%(Or invent it: ordain #{kind.inspect}, emoji: "…", habitat: :land))
+        end
       end
     end
 
-    # Time is a verb. Nothing in Terra moves except through here.
+    # The deliberate clock. Acts spend days on their own (TIME_COSTS);
+    # `pass` is for when you want nothing but time itself to happen.
     def pass(days = 1)
       return frozen_lament if world.frozen?
       return puts("Time cannot pass in a world without light.") unless world.lit?
@@ -341,53 +352,52 @@ module Terra
     #   smite at: [5, 1]   ·   smite 5, 1          the tile
     #   smite wolf         ·   smite world.animals.select { … }
     def smite(*targets, at: nil)
-      return frozen_lament if world.frozen?
-
-      targets = targets.flatten
-      if at.nil? && targets.size == 2 && targets.all?(Integer)
-        at = targets
-        targets = []
-      end
-      if at.nil? && targets.empty?
-        return puts("Aim first: smite at: [3, 4] · smite 5, 1 · smite wolf · smite herd")
-      end
-
-      epitaphs = []
-      if at
-        tile = world.at(*at)
-        return puts("Your wrath sails off the edge of the world.") unless tile
-        epitaphs.concat(strike_tile(tile))
-      end
-      targets.each do |t|
-        case t
-        when Being
-          epitaphs.concat(strike_tile(t.tile)) if world.beings.include?(t)
-        when Feature
-          epitaphs << "Your lightning glances off #{t.title}. (`unmake` removes landforms.)"
-        when Symbol, String
-          matches = resolve_by_name(t)
-          creatures = matches.grep(Being)
-          if creatures.size == 1
-            epitaphs.concat(strike_tile(creatures.first.tile))
-          elsif creatures.size > 1
-            epitaphs << "The bolt hovers — #{creatures.size} answer to #{t.inspect}. Pick one:"
-            epitaphs.concat(creatures.map { |c| "  #{c.inspect}" })
-          elsif matches.any?
-            epitaphs << "Your lightning glances off landforms. (`unmake` removes those.)"
-          else
-            epitaphs << "No #{t.inspect} to strike."
-          end
-        else
-          epitaphs << "The bolt fizzles at #{t.inspect} — smite takes creatures, or at: [x, y]."
+      enact(:smite) do
+        targets = targets.flatten
+        if at.nil? && targets.size == 2 && targets.all?(Integer)
+          at = targets
+          targets = []
         end
-      end
+        if at.nil? && targets.empty?
+          refuse!("Aim first: smite at: [3, 4] · smite 5, 1 · smite wolf · smite herd")
+        end
 
-      note = at ? "⚡ Lightning strikes (#{at.join(', ')})" : "⚡ Lightning falls"
-      note += " — #{epitaphs.join(' · ')}" if epitaphs.any?
-      world.record!(note)
-      world.behold!
-      puts epitaphs.join("\n") unless epitaphs.empty?
-      at ? world.at(*at) : nil
+        epitaphs = []
+        if at
+          tile = world.at(*at)
+          refuse!("Your wrath sails off the edge of the world.") unless tile
+          epitaphs.concat(strike_tile(tile))
+        end
+        targets.each do |t|
+          case t
+          when Being
+            epitaphs.concat(strike_tile(t.tile)) if world.beings.include?(t)
+          when Feature
+            epitaphs << "Your lightning glances off #{t.title}. (`unmake` removes landforms.)"
+          when Symbol, String
+            matches = resolve_by_name(t)
+            creatures = matches.grep(Being)
+            if creatures.size == 1
+              epitaphs.concat(strike_tile(creatures.first.tile))
+            elsif creatures.size > 1
+              epitaphs << "The bolt hovers — #{creatures.size} answer to #{t.inspect}. Pick one:"
+              epitaphs.concat(creatures.map { |c| "  #{c.inspect}" })
+            elsif matches.any?
+              epitaphs << "Your lightning glances off landforms. (`unmake` removes those.)"
+            else
+              epitaphs << "No #{t.inspect} to strike."
+            end
+          else
+            epitaphs << "The bolt fizzles at #{t.inspect} — smite takes creatures, or at: [x, y]."
+          end
+        end
+
+        note = at ? "⚡ Lightning strikes (#{at.join(', ')})" : "⚡ Lightning falls"
+        note += " — #{epitaphs.join(' · ')}" if epitaphs.any?
+        world.record!(note)
+        puts epitaphs.join("\n") unless epitaphs.empty?
+        at ? world.at(*at) : nil
+      end
     end
 
     def behold = world
@@ -417,24 +427,24 @@ module Terra
     # Reversible climate powers. These mutate simulation state and are not
     # Ruby Object#freeze; their seasonal names keep that distinction visible.
     def winter!
-      return frozen_lament if world.frozen?
-      return puts("Winter needs a world beneath it. First: let_there_be :light") unless world.lit?
-      return puts("Winter already holds the world.") if world.winter?
+      enact(:winter!) do
+        refuse!("Winter needs a world beneath it. First: let_there_be :light") unless world.lit?
+        refuse!("Winter already holds the world.") if world.winter?
 
-      world.winter!
-      world.behold!
-      puts "❄️ Winter takes the world. Water ices, fires fail, and snow holds."
-      nil
+        world.winter!
+        puts "❄️ Winter takes the world. Water ices, fires fail, and snow holds."
+        nil
+      end
     end
 
     def spring!
-      return frozen_lament if world.frozen?
-      return puts("There is no winter to thaw.") unless world.winter?
+      enact(:spring!) do
+        refuse!("There is no winter to thaw.") unless world.winter?
 
-      world.spring!
-      world.behold!
-      puts "🌱 Spring answers. The waters claimed by winter run again."
-      nil
+        world.spring!
+        puts "🌱 Spring answers. The waters claimed by winter run again."
+        nil
+      end
     end
 
     # The narrative doorway to Ruby's actual freeze semantics. World#freeze
@@ -488,39 +498,40 @@ module Terra
     # matches; ambiguity lists the candidates instead of guessing.
     # Unmade land reverts to plains — water lives only where lakes do.
     def unmake(*things)
-      return frozen_lament if world.frozen?
-
-      targets = things.flatten
-      if targets.empty?
-        return puts(%(Point at a thing: unmake :lake · unmake "Mirkwood" · unmake world.animals.first))
-      end
-
-      resolved = []
-      notes = []
-      targets.each do |t|
-        case t
-        when Feature, Being
-          resolved << t
-        when Symbol, String
-          matches = resolve_by_name(t)
-          case matches.size
-          when 0 then notes << "No #{t.inspect} in this world."
-          when 1 then resolved.concat(matches)
-          else
-            notes << "#{matches.size} things answer to #{t.inspect}:"
-            notes.concat(matches.map { |m| "  #{m.inspect}" })
-            notes << "Names are ambiguous; references are not. Try world.features or the plural (world.lakes)."
-          end
-        else
-          notes << "You cannot unmake #{t.inspect}."
+      enact(:unmake) do
+        targets = things.flatten
+        if targets.empty?
+          refuse!(%(Point at a thing: unmake :lake · unmake "Mirkwood" · unmake world.animals.first))
         end
-      end
 
-      epitaphs = resolved.filter_map { |t| unmake_one(t) }
-      world.record!("🕳️ #{epitaphs.join(' · ')}") if epitaphs.any?
-      world.behold! if epitaphs.any?
-      puts (epitaphs + notes).join("\n") if epitaphs.any? || notes.any?
-      nil
+        resolved = []
+        notes = []
+        targets.each do |t|
+          case t
+          when Feature, Being
+            resolved << t
+          when Symbol, String
+            matches = resolve_by_name(t)
+            case matches.size
+            when 0 then notes << "No #{t.inspect} in this world."
+            when 1 then resolved.concat(matches)
+            else
+              notes << "#{matches.size} things answer to #{t.inspect}:"
+              notes.concat(matches.map { |m| "  #{m.inspect}" })
+              notes << "Names are ambiguous; references are not. Try world.features or the plural (world.lakes)."
+            end
+          else
+            notes << "You cannot unmake #{t.inspect}."
+          end
+        end
+
+        epitaphs = resolved.filter_map { |t| unmake_one(t) }
+        puts (epitaphs + notes).join("\n") if epitaphs.any? || notes.any?
+        refuse! if epitaphs.empty? # nothing was unmade — no day is owed
+
+        world.record!("🕳️ #{epitaphs.join(' · ')}")
+        nil
+      end
     end
 
     # Invent a species: an animal (habitat: + speed:) or a plant (grows_on:
@@ -528,37 +539,39 @@ module Terra
     # classes needed.
     def ordain(kind, emoji: nil, habitat: nil, speed: 1, grows_on: nil, spread: 0.15,
                spread_limit: Plant::DEFAULT_SPREAD_LIMIT, lifespan: 10)
-      return frozen_lament if world.frozen?
-      unless kind.is_a?(Symbol) && emoji
-        puts %(Name and mark it: ordain :wolf, emoji: "🐺", habitat: :land, speed: 3)
-        puts %(Plants take root:  ordain :cactus, emoji: "🌵", grows_on: [:sand], spread_limit: 2, lifespan: 40)
-        return
-      end
-
-      known = Animal::KINDS.key?(kind) || Plant::KINDS.key?(kind)
-      if habitat
-        unless Animal::PASSABLE.key?(habitat)
-          return puts("Habitat must be one of: #{Animal::PASSABLE.keys.map(&:inspect).join(', ')}")
+      enact(:ordain) do
+        unless kind.is_a?(Symbol) && emoji
+          puts %(Name and mark it: ordain :wolf, emoji: "🐺", habitat: :land, speed: 3)
+          refuse!(%(Plants take root:  ordain :cactus, emoji: "🌵", grows_on: [:sand], spread_limit: 2, lifespan: 40))
         end
-        Animal.ordain(kind, emoji: emoji, habitat: habitat, speed: speed)
-        puts "#{emoji} #{known ? 'You reshape' : 'Into the book of species goes'} the #{kind} — #{habitat}, speed #{speed}."
-      elsif grows_on
-        Plant.ordain(kind, emoji: emoji, grows_on: grows_on, spread: spread,
-                    spread_limit: spread_limit, lifespan: lifespan)
-        puts "#{emoji} #{known ? 'You reshape' : 'Into the book of species goes'} the #{kind} — roots in #{Array(grows_on).join('/')}, each seed may spread #{spread_limit} cells."
-      else
-        return puts("Give it a nature: habitat: :land/:water/:air (animal) or grows_on: [:plains] (plant).")
+
+        known = Animal::KINDS.key?(kind) || Plant::KINDS.key?(kind)
+        if habitat
+          unless Animal::PASSABLE.key?(habitat)
+            refuse!("Habitat must be one of: #{Animal::PASSABLE.keys.map(&:inspect).join(', ')}")
+          end
+          Animal.ordain(kind, emoji: emoji, habitat: habitat, speed: speed)
+          puts "#{emoji} #{known ? 'You reshape' : 'Into the book of species goes'} the #{kind} — #{habitat}, speed #{speed}."
+        elsif grows_on
+          Plant.ordain(kind, emoji: emoji, grows_on: grows_on, spread: spread,
+                      spread_limit: spread_limit, lifespan: lifespan)
+          puts "#{emoji} #{known ? 'You reshape' : 'Into the book of species goes'} the #{kind} — roots in #{Array(grows_on).join('/')}, each seed may spread #{spread_limit} cells."
+        else
+          refuse!("Give it a nature: habitat: :land/:water/:air (animal) or grows_on: [:plains] (plant).")
+        end
+        puts "   spawn #{kind.inspect} awaits. (Session-only — edit lib/terra/animal.rb or plant.rb to make it eternal.)"
+        world.record!("📖 #{emoji} The #{kind} is ordained into the book of species")
+        nil
       end
-      puts "   spawn #{kind.inspect} awaits. (Session-only — edit lib/terra/animal.rb or plant.rb to make it eternal.)"
-      world.record!("📖 #{emoji} The #{kind} is ordained into the book of species")
-      nil
     end
 
     def powers
       puts <<~SHEET
         ━━━ THE LAWS OF TERRA ━━━
         ⚡ The echo is the UI — every value draws itself. `world` IS the map.
-        ⏳ Time passes only when you `pass`. Between commands, a photograph.
+        ⏳ Acting spends time — every successful power costs days (most 1,
+           terraform 3, the seasons 2). A refused act costs nothing.
+           `pass` spends days deliberately; observing is always free.
         🥶 `great_freeze!` calls Ruby's real Object#freeze through `super`. No undo.
 
         ━━━ LEVEL 1: GENESIS ━━━
@@ -597,7 +610,7 @@ module Terra
         spawn :hawk                 🦅 flies anywhere    spawn :cactus   🌵 :mushroom 🍄 too
         sow 12 / sow 6, on: :sand   scatter seeds; each grows what its terrain allows
                                     (🌿🌼 grassland · 🍄 forest · 🌵 sand · 🪷 water)
-        pass / pass 7               let days happen — animals roam, plants live & die
+        pass / pass 7               spend extra days — animals roam, plants live & die
         let_there_be :rain          command the sky: :rain :snow :storm :clear
                                     (it also shifts on its own as days pass — the map
                                      header IS the forecast; rain feeds plants, snow
@@ -619,6 +632,36 @@ module Terra
     end
 
     private
+
+    # The one gate every act passes through. A frozen world refuses
+    # everything; a refuse! anywhere in the body aborts without charging;
+    # success spends the act's TIME_COSTS days, then shows the world.
+    #
+    # catch/throw is Ruby's non-exception early exit: the throw inside
+    # refuse! unwinds straight to this catch even when it happens several
+    # method calls deep (summon_life, breathe_creature). Kotlin's labeled
+    # returns can't cross method boundaries like that; exceptions could,
+    # but a refusal isn't exceptional — it's a normal answer.
+    def enact(power)
+      return frozen_lament if world.frozen?
+
+      result = catch(:refused) do
+        value = yield
+        # Time is the price of action. The void has no days to spend yet,
+        # so pre-light acts (an early `ordain`) are free.
+        world.advance!(TIME_COSTS.fetch(power), quiet: true) if world.lit?
+        world.behold!
+        value
+      end
+      result.equal?(REFUSED) ? nil : result
+    end
+
+    # Abort the current act: say why (if there's anything to say), charge
+    # nothing. Only meaningful inside an enact block.
+    def refuse!(message = nil)
+      puts message if message
+      throw :refused, REFUSED
+    end
 
     # A Symbol finds things by kind; a String finds features by their name.
     def resolve_by_name(ref)
@@ -644,7 +687,7 @@ module Terra
       lines << "   → spawn :lake / :mountain / :forest — shape the land" if world.features.empty?
       lines << "   → let_there_be :life — the world is ready to breathe" unless world.life?
       lines << "   → spawn :rabbit, count: 3 — life is unlocked but nothing lives" if world.life? && world.beings.empty?
-      lines << "   → pass 7 — you have creatures, but time has never moved" if world.beings.any? && world.day.zero?
+      lines << "   → pass 7 — let the days deepen what you've made" if world.beings.any? && world.day < 7
       lines << "   → all is well; pass some days, or inspire for mischief" if lines.one?
       lines
     end
@@ -687,8 +730,8 @@ module Terra
     end
 
     def summon_life
-      return puts("Life needs light. First: let_there_be :light") unless world.lit?
-      return puts("Life already stirs in this world.") if world.life?
+      refuse!("Life needs light. First: let_there_be :light") unless world.lit?
+      refuse!("Life already stirs in this world.") if world.life?
 
       world.bestow_life!
       puts <<~LIFE
@@ -698,27 +741,22 @@ module Terra
           spawn :fish                🐟 water-locked    spawn :lily     🪷 floats on water
           spawn :hawk                🦅 goes anywhere
 
-        ⏳ Time is yours too: `pass` advances one day, `pass 7` a week.
-           Nothing moves while you are looking. (`powers` for the details.)
+        ⏳ Every act spends its days as you work; `pass 7` spends a week
+           on purpose. (`powers` for the details.)
       LIFE
       nil
     end
 
     def breathe_creature(kind, at:, count:, brain:)
-      unless world.life?
-        puts "The #{kind} is inert clay. Life itself is missing: let_there_be :life"
-        return
-      end
+      refuse!("The #{kind} is inert clay. Life itself is missing: let_there_be :life") unless world.life?
       if brain && Plant::KINDS.key?(kind)
         puts "🌱 Plants have no will of their own — your block drifts away on the wind."
         brain = nil
       end
 
       born = world.breathe(kind, at: at, count: count, brain: brain)
-      return puts("No hospitable ground for #{kind.inspect} anywhere in this world.") if born.empty?
+      refuse!("No hospitable ground for #{kind.inspect} anywhere in this world.") if born.empty?
 
-      world.behold!
-      puts "⏳ Nothing will move until you `pass`." if world.day.zero? && born.first.is_a?(Animal)
       born.one? ? born.first : born
     end
 

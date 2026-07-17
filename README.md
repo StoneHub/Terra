@@ -40,7 +40,7 @@ mtn.erupt!
 let_there_be :life
 spawn :rabbit, count: 3
 spawn :fern
-pass 7                                     # time moves only when you say so
+pass 7                                     # spend a week on purpose — your acts also cost days
 winter!                                    # reversible climate; spring! restores its water
 world.plants.first.spread_remaining        # every root seed has a finite colony budget
 smite 4, 4                                 # lightning starts a small fire; ◾ is cooled ash
@@ -55,7 +55,7 @@ great_freeze!                              # heat death through Ruby's real Obje
 ## The Laws of Terra
 
 1. **The echo is the UI** — IRB prints every return value; `World#inspect` returns the map.
-2. **Time passes only when you `pass`** — no engine loop; the world ticks on command, roguelike-style.
+2. **Acting spends time** — every successful power costs days (most 1, `terraform` 3, the seasons 2); a refused act costs nothing, observing is free. `pass` spends days deliberately. No engine loop — the world still only ticks on command.
 3. **Seasons are state** — `winter!` and `spring!` reversibly mutate this world; ice is terrain, never Ruby's `freeze`.
 4. **The Great Freeze is forever** — `great_freeze!` calls `World#freeze`, whose `super` invokes Ruby's real, shallow, irreversible `Object#freeze`. `big_bang!` creates and binds a different World; nothing is unfrozen.
 

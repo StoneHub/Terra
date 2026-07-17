@@ -3,7 +3,8 @@
 module Terra
   # The grid, plus everything alive on it. Starts as void; `illuminate!` is
   # the big-bang switch, `bestow_life!` wakes Level 2. Time only moves when
-  # `advance!` is called — between calls the world is a photograph.
+  # `advance!` is called — Godhood charges it per act (TIME_COSTS) and
+  # `pass` spends it deliberately; between ticks the world is a photograph.
   #
   # Presentation lives in Cartographer; plural lookups (world.rabbits) come
   # from the SpeciesLookup mixin. This class is only simulation state.
@@ -193,12 +194,15 @@ module Terra
     end
 
     # One day per step: the sky shifts, every being acts, existing fires move
-    # and burn out, then storms may strike.
-    def advance!(days = 1)
+    # and burn out, then storms may strike. `quiet: true` is for the days a
+    # god's own act spends (Godhood::TIME_COSTS): the world lives exactly the
+    # same, but the commanded sky holds steady and no "days pass" entry is
+    # written — the act's own chronicle note already tells the story.
+    def advance!(days = 1, quiet: false)
       before = beings.size
       days.times do
         @day += 1
-        @weather = WEATHER.keys.sample if !winter? && rand > 0.6 # winter holds; other skies are sticky
+        @weather = WEATHER.keys.sample if !quiet && !winter? && rand > 0.6 # winter holds; other skies are sticky
         beings.dup.each(&:tick) # dup: plants seed children mid-walk
         beings.reject!(&:dead?)
         spread = advance_fires!
@@ -208,6 +212,8 @@ module Terra
           record!("⛈️ Wild lightning finds the world#{" — it takes the #{struck.first.kind}" if struck.any?}")
         end
       end
+      return self if quiet
+
       drift = beings.size - before
       passage = days == 1 ? "1 day passes" : "#{days} days pass"
       record!("⏳ #{passage}#{format(' (%+d souls)', drift) unless drift.zero?} — #{WEATHER.fetch(weather)} #{weather} skies")
