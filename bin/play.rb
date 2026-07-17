@@ -18,14 +18,8 @@ $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 
 require "terra/session" # genesis + banner
 
-# Ruby 3.4 warns that IRB becomes an external gem in Ruby 4. bin/setup checks
-# for (and installs) it, so the warning is noise on the pinned runtime.
-deprecated_warnings = Warning[:deprecated]
-Warning[:deprecated] = false
-begin
-  require "irb"
-ensure
-  Warning[:deprecated] = deprecated_warnings
-end
+# On Ruby 4.0 irb is an ordinary gem (declared in the Gemfile), so this is
+# a plain require — the 3.4-era deprecation shuffle is gone with the pin.
+require "irb"
 
 IRB.start(__FILE__)
