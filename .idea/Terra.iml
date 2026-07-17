@@ -28,13 +28,7 @@
       <sourceFolder url="file://$MODULE_DIR$/spec" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/test" isTestSource="true" />
     </content>
-    <orderEntry type="jdk" jdkName="ruby-4.0.5-p0" jdkType="RUBY_SDK" />
+    <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" scope="PROVIDED" name="erb (v6.0.1.1, ruby-4.0.5-p0) [gem]" level="application" />
-    <orderEntry type="library" scope="PROVIDED" name="io-console (v0.8.2, ruby-4.0.5-p0) [gem]" level="application" />
-    <orderEntry type="library" scope="PROVIDED" name="irb (v1.16.0, ruby-4.0.5-p0) [gem]" level="application" />
-    <orderEntry type="library" scope="PROVIDED" name="psych (v5.3.1, ruby-4.0.5-p0) [gem]" level="application" />
-    <orderEntry type="library" scope="PROVIDED" name="rdoc (v7.0.4, ruby-4.0.5-p0) [gem]" level="application" />
-    <orderEntry type="library" scope="PROVIDED" name="reline (v0.6.3, ruby-4.0.5-p0) [gem]" level="application" />
   </component>
 </module>

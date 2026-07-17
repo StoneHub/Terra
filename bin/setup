@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
+
+# A mise install is isolated to Terra and works on both Intel and Apple Silicon.
+# Prefer its precompiled Ruby so a fresh Mac does not need compiler/YAML headers.
+if command -v mise >/dev/null 2>&1 && [ "${TERRA_SETUP_WITH_MISE:-0}" != "1" ]; then
+  echo "Installing Terra's pinned Ruby with mise..."
+  MISE_RUBY_COMPILE=false mise install ruby@3.4.10
+  exec env TERRA_SETUP_WITH_MISE=1 mise exec ruby@3.4.10 -- "$ROOT/bin/setup"
+fi
+
+if ! command -v ruby >/dev/null 2>&1; then
+  cat >&2 <<'MESSAGE'
+Terra requires Ruby 3.1 or newer.
+
+Recommended Mac setup:
+  brew install mise
+  bin/setup
+MESSAGE
+  exit 1
+fi
+
+if ! ruby -e 'major, minor = RUBY_VERSION.split(".").map(&:to_i); exit(major > 3 || (major == 3 && minor >= 1) ? 0 : 1)'; then
+  cat >&2 <<MESSAGE
+Terra requires Ruby 3.1 or newer; this shell is using Ruby $(ruby --version).
+Apple's /usr/bin/ruby is too old for Terra.
+
+Recommended Mac setup:
+  brew install mise
+  bin/setup
+MESSAGE
+  exit 1
+fi
+
+if ! command -v bundle >/dev/null 2>&1; then
+  echo "Installing Bundler..."
+  gem install bundler --no-document
+fi
+
+# Ruby 3.4 ships IRB and ERB. Ruby releases that externalize either library
+# get it only when missing, keeping the normal Mac setup free of native builds.
+if ! ruby -e 'Warning[:deprecated] = false if Warning.respond_to?(:[]=); require "irb"; require "erb"' >/dev/null 2>&1; then
+  echo "Installing Terra's interactive Ruby libraries..."
+  gem install irb erb --no-document
+fi
+
+echo "Installing Terra's Ruby gems..."
+bundle install
+
+echo "Running Terra's test suite..."
+bundle exec rake
+
+echo
+echo "Terra is ready. Start with: bin/terra"
