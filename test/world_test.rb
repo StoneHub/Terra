@@ -30,20 +30,6 @@ class WorldTest < Minitest::Test
     assert(world.tiles.all? { |t| t.terrain == :plains })
   end
 
-  def test_benight_hides_without_destroying
-    lit_world!
-    quietly { god.spawn :lake, at: [3, 3] }
-    terrain = world.tiles.map(&:terrain)
-
-    world.benight!
-    refute world.lit?
-    refute_includes world.render, "🌊"
-    assert_includes world.render, "⬛"
-
-    world.illuminate!
-    assert_equal terrain, world.tiles.map(&:terrain)
-  end
-
   def test_advance_moves_the_calendar_and_records
     lit_world!
     world.advance!(5)

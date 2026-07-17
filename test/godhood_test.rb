@@ -26,16 +26,6 @@ class GodhoodTest < Minitest::Test
     assert_includes out, ":dinner"
   end
 
-  def test_darkness_refuses_time_and_creation
-    live_world!
-    quietly { god.spawn :rabbit }
-    quietly { god.let_there_be :darkness }
-    quietly { god.pass 3 }
-    assert_equal 0, world.day
-    out, = capture_io { god.let_there_be :darkness }
-    assert_includes out, "already absolute"
-  end
-
   def test_smite_by_bare_coords_and_reference
     live_world!
     tile = quietly { god.smite 2, 2 }

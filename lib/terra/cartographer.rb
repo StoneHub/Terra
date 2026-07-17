@@ -22,10 +22,7 @@ module Terra
       # World#freeze, whose `super` reaches Object#freeze.
       if world.frozen? then "🥶 The Great Freeze — no usable energy remains. Only a new `big_bang!` can follow."
       elsif world.lit? then "#{World::WEATHER.fetch(world.weather)}  Terra — day #{world.day}"
-      elsif world.day.zero? && world.features.empty?
-        "🌑 The Void — darkness upon the face of the deep"
-      else
-        "🌑 Darkness covers Terra — day #{world.day}. The world waits beneath, unseen."
+      else "🌑 The Void — darkness upon the face of the deep"
       end
     end
 

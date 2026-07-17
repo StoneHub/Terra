@@ -361,7 +361,7 @@ You are a god. Type `powers` to see your abilities.</span></pre>
 
   <section id="grimoire">
     <h2>The grimoire</h2>
-    <p class="section-note">Nine complete rituals, ready to paste. In the game, <code>inspire</code> deals you one at random.</p>
+    <p class="section-note">Complete rituals, ready to paste. In the game, <code>inspire</code> deals you one at random.</p>
     <div class="cards" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
       <div class="card">
         <h3>🐇 The Pilgrimage</h3><p>A rabbit with divine purpose.</p>
@@ -390,12 +390,6 @@ world.animals.max_by(&amp;:age)   # the elder</pre>
         <h3>⚡ The Reckoning</h3><p>Judgment for everything past its fifth year.</p>
         <pre class="mono" style="font-size:0.8rem; overflow-x:auto; margin:0.5rem 0 0;">elders = world.animals.select { |a| a.age > 5 }
 smite elders</pre>
-      </div>
-      <div class="card">
-        <h3>🌑 Nightfall</h3><p>Darkness is a pause; the Great Freeze is an ending.</p>
-        <pre class="mono" style="font-size:0.8rem; overflow-x:auto; margin:0.5rem 0 0;">let_there_be :darkness
-pass 3    # refused — time needs light
-let_there_be :light   # all exactly as it was</pre>
       </div>
       <div class="card">
         <h3>⏳ The Long Silence</h3><p>Walk away. See what the world does without you.</p>
@@ -483,7 +477,6 @@ chronicle!</pre>
         <tr><td><code>spawn :lake, at: [x, y], size: 2, name: "…"</code></td><td>Create a landform; all keywords optional. Kinds: <code>:lake :river :mountain :forest :desert :grassland</code>. Returns the thing itself.</td></tr>
         <tr><td><code>spawn :river, at: [0, 4], length: world.width, width: 2</code></td><td>Run connected 🌊 water across the map. <code>length:</code> controls its traversal and <code>width:</code> controls its water band.</td></tr>
         <tr><td><code>terraform :meadow</code></td><td>Repaint <strong>every remaining barren 🟫 tile</strong> as one terrain (<code>:sand</code>, <code>:water</code>, <code>:forest</code>…). Claimed and grown land is untouched — it fills the gaps between your works. <code>terraform :water</code> makes an ocean world; land animals will regret it.</td></tr>
-        <tr><td><code>let_there_be :darkness</code></td><td>Withdraw the light. The world hides (all ⬛) and time refuses to pass — but nothing is destroyed. <code>let_there_be :light</code> restores it exactly. A boolean pauses; the Great Freeze ends.</td></tr>
         <tr><td><code>winter!</code> / <code>spring!</code></td><td>Reversible global climate. Winter ices water, extinguishes fire, holds snow, and traps fish; spring thaws only the water that winter claimed.</td></tr>
         <tr><td><code>let_there_be :life</code></td><td>Unlock creatures. Needs light first.</td></tr>
         <tr><td><code>spawn :rabbit, count: 3, at: [x, y]</code></td><td>Creatures: <code>:rabbit :tortoise :fish :hawk :fern :flower :lily</code>. Add a block for a divine brain (animals only).</td></tr>
@@ -773,7 +766,7 @@ Day   5 — ⚡ Lightning strikes (3, 3) — 🌿 The smite claims the fern.</sp
     <div class="table-scroll">
       <table>
         <tr><th>Glyph</th><th>Terrain</th><th>How it happens</th></tr>
-        <tr><td class="legend-emoji">⬛</td><td>void / darkness</td><td>Before light — or after <code>let_there_be :darkness</code>.</td></tr>
+        <tr><td class="legend-emoji">⬛</td><td>void</td><td>Before light. Nothing exists yet.</td></tr>
         <tr><td class="legend-emoji">🟫</td><td>plains</td><td>Barren earth. What light makes; the blank canvas.</td></tr>
         <tr><td class="legend-emoji">🟩</td><td>meadow</td><td>What life leaves. Any earth a plant takes root in turns green — and stays green after the plant dies. The land remembers.</td></tr>
         <tr><td class="legend-emoji">🌊 🧊</td><td>water / ice</td><td><code>spawn :lake</code>, then <code>ice_over!</code> / <code>thaw!</code>; or <code>winter!</code> / <code>spring!</code></td></tr>

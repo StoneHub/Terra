@@ -47,10 +47,6 @@ module Terra
       { title: "The Reckoning", lore: "Judgment day for everything past its fifth year.",
         lines: ['elders = world.animals.select { |a| a.age > 5 }',
                 'smite elders'] },
-      { title: "Nightfall", lore: "Darkness is a pause; the Great Freeze is an ending. Feel the difference.",
-        lines: ['let_there_be :darkness',
-                'pass 3    # refused — time needs light',
-                'let_there_be :light   # everything exactly as it was'] },
       { title: "The Long Silence", lore: "Walk away. See what the world does without you.",
         lines: ['pass 30',
                 'chronicle'] },
@@ -162,11 +158,6 @@ module Terra
           chronicle           recent acts       chronicle!    the illuminated HTML
           world.history       raw entries: { day:, note:, map: }
       TXT
-      darkness: <<~TXT,
-        darkness — the reversible night. let_there_be :darkness hides the world
-        (all ⬛) and time refuses to pass; let_there_be :light restores it exactly.
-        Compare :great_freeze — a boolean pauses, a frozen object ends.
-      TXT
       winter: <<~TXT,
         winter — reversible world climate, ordinary mutable game state.
           winter!      water ices, fire dies, snow holds, fish wait
@@ -223,11 +214,6 @@ module Terra
         world.illuminate!
         puts "And there was light. 🌅"
         world.behold!
-      when :darkness
-        return puts("The dark is already absolute.") unless world.lit?
-        world.benight!
-        puts "You withdraw the light. The world is not gone — only unseen."
-        world.behold!
       when :life
         summon_life
       when :rain, :snow, :storm, :clear
@@ -240,7 +226,7 @@ module Terra
         world.behold!
       else
         puts "The void does not understand #{what.inspect}. " \
-             "It knows :light, :darkness, :life — and the skies: :rain, :snow, :storm, :clear."
+             "It knows :light, :life — and the skies: :rain, :snow, :storm, :clear."
         nil
       end
     end
@@ -578,7 +564,6 @@ module Terra
 
         ━━━ LEVEL 1: GENESIS ━━━
         let_there_be :light                              begin creation
-        let_there_be :darkness                           withdraw it — a reversible night
         winter! / spring!                                reversible world climate
         spawn :lake, at: [4, 3], size: 2, name: "…"      also :mountain :forest :desert
         spawn :river, at: [0, 4], length: 12, width: 2   🌊 connected water across the map
@@ -651,8 +636,7 @@ module Terra
     def situation
       return ["🥶 The Great Freeze has ended this world. Write chronicle!, then big_bang!."] if world.frozen?
 
-      if !world.lit?
-        return ["🌑 Darkness. The world waits beneath, intact.", "   → let_there_be :light"] if world.day.positive? || world.features.any?
+      unless world.lit?
         return ["🌑 The void. Nothing exists yet.", "   → let_there_be :light   (or eden! to skip ahead)"]
       end
 

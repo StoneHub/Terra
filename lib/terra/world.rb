@@ -68,15 +68,6 @@ module Terra
       self
     end
 
-    # The reversible opposite of illuminate! — @lit is just a boolean, so
-    # darkness HIDES the world without destroying it. Compare `freeze`,
-    # the permanent version. Mutable state pauses; frozen state ends.
-    def benight!
-      @lit = false
-      record!("🌑 The light is withdrawn. Darkness covers the world.")
-      self
-    end
-
     # A god may command the sky directly.
     def weather=(kind)
       raise ArgumentError, "the sky knows only #{WEATHER.keys.map(&:inspect).join(', ')}" unless WEATHER.key?(kind)
