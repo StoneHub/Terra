@@ -162,7 +162,6 @@ module Terra
         winter — reversible world climate, ordinary mutable game state.
           winter!      water ices, fire dies, snow holds, fish wait
           spring!      only water frozen by that winter thaws again
-          lake.ice_over! / lake.thaw!     change one lake instead
       TXT
       great_freeze: <<~TXT,
         great_freeze — the universe runs out of usable energy. Permanent.
@@ -585,7 +584,7 @@ module Terra
 
         Every spawn RETURNS the thing — hold it and poke it:
           lake = spawn :lake        lake.name = "Mirrormere"
-          lake.ice_over!  lake.thaw!  mountain.erupt!  forest.grow!
+          mountain.erupt!  forest.grow!  lake.iced_over?
       SHEET
 
       status = world.life? ? "🔓" : "🔒 sleeping — wake it: let_there_be :life"

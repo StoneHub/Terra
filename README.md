@@ -56,7 +56,7 @@ great_freeze!                              # heat death through Ruby's real Obje
 
 1. **The echo is the UI** — IRB prints every return value; `World#inspect` returns the map.
 2. **Time passes only when you `pass`** — no engine loop; the world ticks on command, roguelike-style.
-3. **Seasons are state** — `winter!` and `spring!` reversibly mutate this world; `lake.ice_over!` and `lake.thaw!` do the same locally.
+3. **Seasons are state** — `winter!` and `spring!` reversibly mutate this world; ice is terrain, never Ruby's `freeze`.
 4. **The Great Freeze is forever** — `great_freeze!` calls `World#freeze`, whose `super` invokes Ruby's real, shallow, irreversible `Object#freeze`. `big_bang!` creates and binds a different World; nothing is unfrozen.
 
 ## Why this teaches Ruby
@@ -65,7 +65,7 @@ great_freeze!                              # heat death through Ruby's real Obje
 |---|---|
 | `spawn :river, length: 12, width: 2` | symbols, keyword args, shape-specific dimensions |
 | `lake.name = "Mirrormere"` | `attr_accessor`, objects are always live |
-| `lake.ice_over!`, `lake.iced_over?` | `!`/`?` naming conventions without hiding Ruby's `freeze` API |
+| `lake.iced_over?`, `mtn.erupt!` | `?` predicates and `!` bang methods, without hiding Ruby's `freeze` API |
 | `world.at(3, 4)` at the prompt | `inspect` is IRB's UI — every echo is a render |
 | `world.features` | arrays of real objects, no DTOs anywhere |
 | reading `feature.rb` | class macros (`manifest_as`), the Rails `has_many` pattern |

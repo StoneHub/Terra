@@ -26,29 +26,12 @@ class FeatureTest < Minitest::Test
     assert_equal "Custom", lake.name
   end
 
-  def test_lake_ices_over_and_thaws_without_ruby_freezing
+  def test_an_iced_lake_is_terrain_state_not_ruby_frozen
     lake = quietly { god.spawn :lake, at: [5, 4] }
-    quietly { lake.ice_over! }
+    lake.tiles.each { |t| t.terrain = :ice }
     assert lake.iced_over?
-    refute lake.frozen?, "physical ice must not shadow Object#frozen?"
+    refute lake.frozen?, "ice is terrain; it must not shadow Object#frozen?"
     assert_equal "🧊", lake.emoji
-    assert(lake.tiles.all? { |t| t.terrain == :ice })
-    quietly { lake.thaw! }
-    refute lake.iced_over?
-  end
-
-  def test_ice_over_and_thaw_do_not_heal_non_water_tiles
-    lake = quietly { god.spawn :lake, at: [5, 4], size: 2 }
-    burned = lake.tiles.first
-    claimed_elsewhere = lake.tiles.last
-    burned.scorch!
-    claimed_elsewhere.terrain = :sand
-
-    quietly { lake.ice_over! }
-    quietly { lake.thaw! }
-
-    assert_equal :scorched, burned.terrain
-    assert_equal :sand, claimed_elsewhere.terrain
   end
 
   def test_river_is_connected_lake_water_with_length_and_width
@@ -76,11 +59,6 @@ class FeatureTest < Minitest::Test
     end
     assert_equal river.tiles.sort_by { |tile| [tile.x, tile.y] },
                  connected.sort_by { |tile| [tile.x, tile.y] }
-
-    quietly { river.ice_over! }
-    assert river.iced_over?
-    quietly { river.thaw! }
-    assert river.tiles.all? { |tile| tile.terrain == :water }
   end
 
   def test_river_rejects_impossible_dimensions

@@ -23,7 +23,7 @@ class LifeTest < Minitest::Test
     world.advance!(10)
     assert_equal :water, fish.tile.terrain
 
-    quietly { lake.ice_over! }
+    lake.tiles.each { |t| t.terrain = :ice }
     spot = fish.pos
     world.advance!(5)
     assert_equal spot, fish.pos, "fish should be trapped under ice"

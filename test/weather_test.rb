@@ -67,7 +67,7 @@ class WeatherTest < Minitest::Test
   def test_spring_only_thaws_water_claimed_by_that_winter
     old_ice = quietly { god.spawn :lake, at: [2, 2], size: 1 }
     winter_water = quietly { god.spawn :lake, at: [9, 6], size: 1 }
-    quietly { old_ice.ice_over! }
+    old_ice.tiles.each { |t| t.terrain = :ice } # iced before winter, by hand
 
     quietly { god.winter! }
     quietly { god.spring! }

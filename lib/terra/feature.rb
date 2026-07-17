@@ -79,21 +79,9 @@ module Terra
     manifest_as :lake, emoji: "🌊", terrain: :water,
                 names: ["Stillwater", "Mirrormere", "Lake Umber"]
 
+    # Ice is terrain state the seasons own (winter!/spring!), never Ruby's
+    # Object#freeze — a `?` predicate is all the Lake itself needs.
     def iced_over? = tiles.all? { |t| t.terrain == :ice }
-
-    # These are physical water-state mutations, deliberately named without
-    # "freeze" so Lake does not hide Ruby's real Object#freeze/#frozen?.
-    def ice_over!
-      tiles.each { |t| t.terrain = :ice if t.terrain == :water }
-      world.behold!
-      self
-    end
-
-    def thaw!
-      tiles.each { |t| t.terrain = :water if t.terrain == :ice }
-      world.behold!
-      self
-    end
 
     def emoji = iced_over? ? "🧊" : super
   end

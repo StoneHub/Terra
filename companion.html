@@ -246,7 +246,7 @@
       </div>
       <div class="card">
         <h3>❄️ Seasons are state</h3>
-        <p><code>winter!</code> and <code>spring!</code> reversibly mutate climate. <code>lake.ice_over!</code> and <code>lake.thaw!</code> do the same locally. These are game mechanics, not Ruby freezing.</p>
+        <p><code>winter!</code> and <code>spring!</code> reversibly mutate climate. Ice is terrain state — a game mechanic, not Ruby freezing.</p>
       </div>
       <div class="card">
         <h3>🥶 The Great Freeze is forever</h3>
@@ -312,13 +312,11 @@ You are a god. Type `powers` to see your abilities.</span></pre>
         <h3>Change it after the fact</h3>
         <p>The object stays alive. Rename it with plain assignment, mutate it with its own methods — the map redraws itself after every act.</p>
         <div class="term">
-          <div class="term-bar"><span class="title">irb — terra</span><button class="copy" data-cmd="lake.ice_over!">copy</button></div>
-          <pre><span class="p">&gt;&gt;</span> lake.ice_over!
-<span class="out map"> 3  🟩🟩🟩🧊🟩🟩
- 4  🟩🟩🧊🧊🧊🟩
- 5  🟩🟩🟩🧊🟩🟩</span>
-<span class="out">=&gt; 🧊 Lake "Mirrormere" — 5 tiles centered near (3, 4)</span>
-<span class="p">&gt;&gt;</span> lake.thaw!</pre>
+          <div class="term-bar"><span class="title">irb — terra</span><button class="copy" data-cmd="lake.name = &quot;Mirrormere&quot;">copy</button></div>
+          <pre><span class="p">&gt;&gt;</span> lake.name = "Mirrormere"
+<span class="out">=&gt; "Mirrormere"</span>
+<span class="p">&gt;&gt;</span> lake
+<span class="out">=&gt; 🌊 Lake "Mirrormere" — 5 tiles centered near (3, 4)</span></pre>
         </div>
       </div>
     </div>
@@ -507,13 +505,13 @@ chronicle!</pre>
     <div class="cards">
       <div class="card">
         <h3><span class="glyph">🌊</span>Lake</h3>
-        <p><code>lake.ice_over!</code> → 🧊 &nbsp; <code>lake.thaw!</code> &nbsp; <code>lake.iced_over?</code></p>
+        <p><code>lake.iced_over?</code> → true when winter has claimed it 🧊</p>
         <p>Default names: Stillwater, Mirrormere, Lake Umber.</p>
       </div>
       <div class="card">
         <h3><span class="glyph">🌊</span>River</h3>
         <p><code>spawn :river, length: world.width, width: 2</code> — connected water whose path, not its emoji, makes it a river.</p>
-        <p>Rivers inherit <code>ice_over!</code>, <code>thaw!</code>, and <code>iced_over?</code> from Lake.</p>
+        <p>Rivers inherit <code>iced_over?</code> and winter behavior from Lake.</p>
       </div>
       <div class="card">
         <h3><span class="glyph">⛰️</span>Mountain</h3>
@@ -769,7 +767,7 @@ Day   5 — ⚡ Lightning strikes (3, 3) — 🌿 The smite claims the fern.</sp
         <tr><td class="legend-emoji">⬛</td><td>void</td><td>Before light. Nothing exists yet.</td></tr>
         <tr><td class="legend-emoji">🟫</td><td>plains</td><td>Barren earth. What light makes; the blank canvas.</td></tr>
         <tr><td class="legend-emoji">🟩</td><td>meadow</td><td>What life leaves. Any earth a plant takes root in turns green — and stays green after the plant dies. The land remembers.</td></tr>
-        <tr><td class="legend-emoji">🌊 🧊</td><td>water / ice</td><td><code>spawn :lake</code>, then <code>ice_over!</code> / <code>thaw!</code>; or <code>winter!</code> / <code>spring!</code></td></tr>
+        <tr><td class="legend-emoji">🌊 🧊</td><td>water / ice</td><td><code>spawn :lake</code>; <code>winter!</code> ices it, <code>spring!</code> thaws it</td></tr>
         <tr><td class="legend-emoji">⛰️ 🌋</td><td>mountain / volcano</td><td><code>spawn :mountain</code>, then <code>erupt!</code></td></tr>
         <tr><td class="legend-emoji">🌲</td><td>forest</td><td><code>spawn :forest</code>; spreads with <code>grow!</code></td></tr>
         <tr><td class="legend-emoji">🟨</td><td>sand</td><td><code>spawn :desert</code></td></tr>
@@ -789,7 +787,7 @@ Day   5 — ⚡ Lightning strikes (3, 3) — 🌿 The smite claims the fern.</sp
         <tr><td><code>:lake</code></td><td>Symbol — interned name, compared by identity</td><td>enum entry / sealed object</td></tr>
         <tr><td><code>at: [3, 4], size: 2</code></td><td>Keyword arguments with defaults</td><td>named params with defaults</td></tr>
         <tr><td><code>lake.name = "…"</code></td><td><code>attr_accessor</code> — one line generates getter + setter</td><td><code>var</code> property</td></tr>
-        <tr><td><code>lake.ice_over!</code></td><td>Trailing <code>!</code> — convention for "mutates / has teeth"</td><td>no equivalent — pure naming culture</td></tr>
+        <tr><td><code>mtn.erupt!</code></td><td>Trailing <code>!</code> — convention for "mutates / has teeth"</td><td>no equivalent — pure naming culture</td></tr>
         <tr><td><code>lake.iced_over?</code></td><td>Trailing <code>?</code> — convention for predicates, without hiding <code>Object#frozen?</code></td><td><code>isIcedOver</code></td></tr>
         <tr><td><code>world.at(3, 4)</code> echoing a description</td><td><code>inspect</code> — every object describes itself; IRB prints it</td><td><code>toString()</code>, but load-bearing</td></tr>
         <tr><td><code>spawn</code> working bare at the prompt</td><td><code>extend</code> — a module grafted onto one object (IRB's <code>main</code>)</td><td>extension functions, scoped to an instance</td></tr>
