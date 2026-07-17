@@ -59,14 +59,28 @@ class WorldTest < Minitest::Test
     assert_includes entry[:note], "light"
   end
 
-  def test_freeze_is_recorded_and_render_ices_over
+  def test_freeze_calls_rubys_real_freeze_and_records_the_great_freeze
     lit_world!
     world.freeze
     assert world.frozen?
-    assert_includes world.history.last[:note], "Time stopped"
-    assert_includes world.render, "🧊"
+    assert_equal :great_freeze, world.ending
+    assert_includes world.history.last[:note], "Great Freeze"
+    assert_includes world.render, "no usable energy"
+    assert_includes world.render, "·"
     world.record!("post-freeze") # history Array itself is not frozen
     assert_equal "post-freeze", world.history.last[:note]
+  end
+
+  def test_freeze_is_idempotent
+    lit_world!
+    world.freeze
+    entries = world.history.size
+    world.freeze
+    assert_equal entries, world.history.size
+  end
+
+  def test_world_has_no_fake_unfreeze
+    refute_respond_to world, :unfreeze
   end
 
   def test_breathe_rejects_unknown_species

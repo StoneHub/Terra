@@ -18,9 +18,9 @@ module Terra
     attr_reader :world
 
     def header
-      # `world.frozen?` is Object#frozen? — the real thing. If a god calls
-      # `world.freeze` (Ruby's own immutability switch), time stops.
-      if world.frozen? then "🧊 Terra — frozen in time by `freeze`. Even gods cannot undo it."
+      # `world.frozen?` is Object#frozen? — the real thing. Great Freeze calls
+      # World#freeze, whose `super` reaches Object#freeze.
+      if world.frozen? then "🥶 The Great Freeze — no usable energy remains. Only a new `big_bang!` can follow."
       elsif world.lit? then "#{World::WEATHER.fetch(world.weather)}  Terra — day #{world.day}"
       elsif world.day.zero? && world.features.empty?
         "🌑 The Void — darkness upon the face of the deep"
@@ -41,13 +41,14 @@ module Terra
     end
 
     def glyph(tile, occupied)
-      return "🧊" if world.frozen?
+      return "· " if world.frozen?
       return "⬛" unless world.lit?
 
       occupied[[tile.x, tile.y]]&.last&.emoji || tile.emoji
     end
 
     def tally
+      return nil if world.frozen?
       return nil unless world.lit? && world.beings.any?
 
       "    🐾 #{world.animals.count} animals · 🌱 #{world.plants.count} plants"

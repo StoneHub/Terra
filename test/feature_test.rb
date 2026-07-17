@@ -26,14 +26,29 @@ class FeatureTest < Minitest::Test
     assert_equal "Custom", lake.name
   end
 
-  def test_lake_freezes_and_thaws
+  def test_lake_ices_over_and_thaws_without_ruby_freezing
     lake = quietly { god.spawn :lake, at: [5, 4] }
-    quietly { lake.freeze! }
-    assert lake.frozen?
+    quietly { lake.ice_over! }
+    assert lake.iced_over?
+    refute lake.frozen?, "physical ice must not shadow Object#frozen?"
     assert_equal "🧊", lake.emoji
     assert(lake.tiles.all? { |t| t.terrain == :ice })
     quietly { lake.thaw! }
-    refute lake.frozen?
+    refute lake.iced_over?
+  end
+
+  def test_ice_over_and_thaw_do_not_heal_non_water_tiles
+    lake = quietly { god.spawn :lake, at: [5, 4], size: 2 }
+    burned = lake.tiles.first
+    claimed_elsewhere = lake.tiles.last
+    burned.scorch!
+    claimed_elsewhere.terrain = :sand
+
+    quietly { lake.ice_over! }
+    quietly { lake.thaw! }
+
+    assert_equal :scorched, burned.terrain
+    assert_equal :sand, claimed_elsewhere.terrain
   end
 
   def test_landforms_are_queryable_by_plural_kind

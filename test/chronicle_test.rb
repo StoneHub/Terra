@@ -37,7 +37,7 @@ class ChronicleTest < Minitest::Test
 
   def test_frozen_worlds_can_still_be_memorialized
     quietly { god.eden! }
-    world.freeze
-    assert_includes write_chronicle, "frozen in time"
+    quietly { god.great_freeze! }
+    assert_includes write_chronicle, "Great Freeze"
   end
 end

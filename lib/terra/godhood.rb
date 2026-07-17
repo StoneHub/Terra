@@ -34,10 +34,10 @@ module Terra
         lines: ['pilgrim = spawn(:rabbit) { |r| r.hop_toward :water }',
                 'pass 10',
                 'pilgrim   # where did faith take it?'] },
-      { title: "Fimbulwinter", lore: "Freeze every lake at once. The fish wait, patient, trapped.",
-        lines: ['world.lakes.each(&:freeze!)',
+      { title: "Fimbulwinter", lore: "Call winter across the world. The fish wait, patient, trapped.",
+        lines: ['winter!',
                 'pass 5    # nothing swims',
-                'world.lakes.each(&:thaw!)'] },
+                'spring!'] },
       { title: "Mirkwood Rising", lore: "Plant one wood, let it swallow the map.",
         lines: ['woods = spawn :forest, name: "Mirkwood"',
                 '3.times { woods.grow! }'] },
@@ -47,7 +47,7 @@ module Terra
       { title: "The Reckoning", lore: "Judgment day for everything past its fifth year.",
         lines: ['elders = world.animals.select { |a| a.age > 5 }',
                 'smite elders'] },
-      { title: "Nightfall", lore: "Darkness is a pause; freeze is an ending. Feel the difference.",
+      { title: "Nightfall", lore: "Darkness is a pause; the Great Freeze is an ending. Feel the difference.",
         lines: ['let_there_be :darkness',
                 'pass 3    # refused — time needs light',
                 'let_there_be :light   # everything exactly as it was'] },
@@ -58,9 +58,9 @@ module Terra
         lines: ['ordain :wolf, emoji: "🐺", habitat: :land, speed: 3',
                 'spawn(:wolf, count: 2) { |w| w.hop_toward :forest }',
                 'pass 7'] },
-      { title: "Doomsday", lore: "End a world properly: freeze it, memorialize it, move on.",
-        lines: ['chronicle!   # write the scripture FIRST',
-                'world.freeze',
+      { title: "Doomsday", lore: "End a world properly: memorialize it, invoke the Great Freeze, move on.",
+        lines: ['great_freeze!',
+                'chronicle!   # includes the final Great Freeze',
                 'big_bang! width: 20, height: 12'] },
       # ---- Great Works: multi-step builds ----
       { title: "The Prairie World", lore: "A living grassland from nothing, in seven lines.",
@@ -108,7 +108,7 @@ module Terra
         terraform :meadow — repaint every barren 🟫 tile at once (:sand, :water, …)
       TXT
       smite: <<~TXT,
-        smite — by place or by thing. Leaves 💀 remains for ~2 days.
+        smite — by place or by thing. Starts a small fire; leaves 💀 remains for ~2 days.
           smite at: [3, 4]  /  smite 3, 4      the tile; splash damage; can miss
           smite wolf  /  smite herd            a reference never misses
           smite :tortoise                      by kind — only if exactly one matches
@@ -129,11 +129,12 @@ module Terra
           sow 12                     🌿🌼 grassland · 🍄 forest · 🌵 sand · 🪷 water
           sow 6, on: :sand           only the desert
         Seeds on stone (or on another plant) are lost — the note says how many.
+        Each root seed has a finite colony budget shared by all its descendants.
       TXT
       weather: <<~TXT,
         weather — the sky shifts as days pass; the map header IS the forecast.
           ☀️ clear   🌧️ rain (plants spread ×2)   ❄️ snow (plants pause)
-          ⛈️ storm — wild lightning may scorch a tile and kill what stands there
+          ⛈️ storm — lightning starts a finite spreading fire; ◾ marks cooled ash
           let_there_be :rain / :snow / :storm / :clear     command it yourself
           world.weather                                    ask it
       TXT
@@ -146,7 +147,7 @@ module Terra
       ordain: <<~TXT,
         ordain — invent a species (session-only; edit animal.rb/plant.rb to keep it).
           ordain :wolf, emoji: "🐺", habitat: :land, speed: 3
-          ordain :cactus, emoji: "🌵", grows_on: [:sand], spread: 0.05, lifespan: 40
+          ordain :cactus, emoji: "🌵", grows_on: [:sand], spread: 0.05, spread_limit: 2, lifespan: 40
       TXT
       targeting: <<~TXT,
         targeting — the REPL is your radar; every echo shows coords.
@@ -176,12 +177,22 @@ module Terra
       darkness: <<~TXT,
         darkness — the reversible night. let_there_be :darkness hides the world
         (all ⬛) and time refuses to pass; let_there_be :light restores it exactly.
-        Compare :freeze — a boolean pauses, a frozen object ends.
+        Compare :great_freeze — a boolean pauses, a frozen object ends.
       TXT
-      freeze: <<~TXT,
-        freeze — world.freeze is Ruby's real Object#freeze: permanent. All ice,
-        all powers refused, no undo. chronicle! still works (the history Array
-        was never frozen). big_bang! is the only mercy.
+      winter: <<~TXT,
+        winter — reversible world climate, ordinary mutable game state.
+          winter!      water ices, fire dies, snow holds, fish wait
+          spring!      only water frozen by that winter thaws again
+          lake.ice_over! / lake.thaw!     change one lake instead
+      TXT
+      great_freeze: <<~TXT,
+        great_freeze — the universe runs out of usable energy. Permanent.
+          great_freeze!     the story command
+          world.frozen?     Ruby's real Object#frozen? answers true
+          big_bang!         bind a newly created World; nothing was unfrozen
+        Under the hood World#freeze sets the ending, then `super` invokes
+        Object#freeze. That is the teaching example: extend behavior, preserve
+        the superclass contract. Ruby has no unfreeze.
       TXT
       eden: <<~TXT,
         eden! — a ready-made world: light, land, life, day 0. Then edit it:
@@ -233,6 +244,9 @@ module Terra
         summon_life
       when :rain, :snow, :storm, :clear
         return puts("The sky needs a world beneath it. First: let_there_be :light") unless world.lit?
+        if world.winter? && what != :snow
+          return puts("Winter holds the sky at :snow. Speak `spring!` before commanding another sky.")
+        end
         world.weather = what
         puts "The sky obeys. #{World::WEATHER.fetch(what)}"
         world.behold!
@@ -463,6 +477,41 @@ module Terra
       nil
     end
 
+    # Reversible climate powers. These mutate simulation state and are not
+    # Ruby Object#freeze; their seasonal names keep that distinction visible.
+    def winter!
+      return frozen_lament if world.frozen?
+      return puts("Winter needs a world beneath it. First: let_there_be :light") unless world.lit?
+      return puts("Winter already holds the world.") if world.winter?
+
+      world.winter!
+      world.behold!
+      puts "❄️ Winter takes the world. Water ices, fires fail, and snow holds."
+      nil
+    end
+
+    def spring!
+      return frozen_lament if world.frozen?
+      return puts("There is no winter to thaw.") unless world.winter?
+
+      world.spring!
+      world.behold!
+      puts "🌱 Spring answers. The waters claimed by winter run again."
+      nil
+    end
+
+    # The narrative doorway to Ruby's actual freeze semantics. World#freeze
+    # adds Terra's ending and calls `super`, which reaches Object#freeze.
+    def great_freeze!
+      return frozen_lament if world.frozen?
+
+      world.freeze
+      world.behold!
+      puts "🥶 No gradients remain. No fire burns. This universe has reached the Great Freeze."
+      puts "   `world.frozen?` is true. Only `big_bang!` can begin another universe."
+      nil
+    end
+
     # The only escape from a frozen world: abandon it. Rebinding
     # Godhood.world orphans the old World object entirely — frozen objects
     # can't be thawed, only left for the garbage collector. Also the only
@@ -538,12 +587,14 @@ module Terra
     end
 
     # Invent a species: an animal (habitat: + speed:) or a plant (grows_on:
-    # + spread:/lifespan:). Just data in an open hash — no new classes needed.
-    def ordain(kind, emoji: nil, habitat: nil, speed: 1, grows_on: nil, spread: 0.15, lifespan: 10)
+    # + spread:/spread_limit:/lifespan:). Just data in an open hash — no new
+    # classes needed.
+    def ordain(kind, emoji: nil, habitat: nil, speed: 1, grows_on: nil, spread: 0.15,
+               spread_limit: Plant::DEFAULT_SPREAD_LIMIT, lifespan: 10)
       return frozen_lament if world.frozen?
       unless kind.is_a?(Symbol) && emoji
         puts %(Name and mark it: ordain :wolf, emoji: "🐺", habitat: :land, speed: 3)
-        puts %(Plants take root:  ordain :cactus, emoji: "🌵", grows_on: [:sand], lifespan: 40)
+        puts %(Plants take root:  ordain :cactus, emoji: "🌵", grows_on: [:sand], spread_limit: 2, lifespan: 40)
         return
       end
 
@@ -555,8 +606,9 @@ module Terra
         Animal.ordain(kind, emoji: emoji, habitat: habitat, speed: speed)
         puts "#{emoji} #{known ? 'You reshape' : 'Into the book of species goes'} the #{kind} — #{habitat}, speed #{speed}."
       elsif grows_on
-        Plant.ordain(kind, emoji: emoji, grows_on: grows_on, spread: spread, lifespan: lifespan)
-        puts "#{emoji} #{known ? 'You reshape' : 'Into the book of species goes'} the #{kind} — roots in #{Array(grows_on).join('/')}."
+        Plant.ordain(kind, emoji: emoji, grows_on: grows_on, spread: spread,
+                    spread_limit: spread_limit, lifespan: lifespan)
+        puts "#{emoji} #{known ? 'You reshape' : 'Into the book of species goes'} the #{kind} — roots in #{Array(grows_on).join('/')}, each seed may spread #{spread_limit} cells."
       else
         return puts("Give it a nature: habitat: :land/:water/:air (animal) or grows_on: [:plains] (plant).")
       end
@@ -570,19 +622,21 @@ module Terra
         ━━━ THE LAWS OF TERRA ━━━
         ⚡ The echo is the UI — every value draws itself. `world` IS the map.
         ⏳ Time passes only when you `pass`. Between commands, a photograph.
-        🧊 `freeze` is forever — Object#freeze has no undo. big_bang! is the only mercy.
+        🥶 `great_freeze!` calls Ruby's real Object#freeze through `super`. No undo.
 
         ━━━ LEVEL 1: GENESIS ━━━
         let_there_be :light                              begin creation
         let_there_be :darkness                           withdraw it — a reversible night
+        winter! / spring!                                reversible world climate
         spawn :lake, at: [4, 3], size: 2, name: "…"      also :mountain :forest :desert
         spawn :grassland                                 🌾 green grass (:meadow) on demand
         terraform :meadow                                repaint ALL barren 🟫 — any terrain
-        smite at: [x, y] / smite 5, 1                    🔥 the place — splash damage
+        smite at: [x, y] / smite 5, 1                    🔥 the place — starts a small fire
         smite wolf / smite herd                          🔥 the thing — never misses
         unmake :lake / unmake "Mirkwood"                 by kind or name (one match only)
         unmake world.features.last                       by reference — always precise
         big_bang! width: 20, height: 12                  begin again — bigger, if you ask
+        great_freeze!                                    heat death — this World ends forever
         eden! width: 16, height: 10                      a ready-made world, yours to edit
         world / behold      the map                      world.at(x, y)   one tile
         world.features      everything you have made     world.history    every recorded act
@@ -595,14 +649,14 @@ module Terra
 
         Every spawn RETURNS the thing — hold it and poke it:
           lake = spawn :lake        lake.name = "Mirrormere"
-          lake.freeze!  lake.thaw!  mountain.erupt!  forest.grow!
+          lake.ice_over!  lake.thaw!  mountain.erupt!  forest.grow!
       SHEET
 
       status = world.life? ? "🔓" : "🔒 sleeping — wake it: let_there_be :life"
       puts <<~SHEET
         ━━━ LEVEL 2: LIFE #{status} ━━━
         let_there_be :life          wake the world; everything below needs it
-        spawn :rabbit, count: 5     🐇 land, speed 2     spawn :fern     🌿 land, spreads
+        spawn :rabbit, count: 5     🐇 land, speed 2     spawn :fern     🌿 finite colony
         spawn :tortoise             🐢 land, speed 1     spawn :flower   🌼 plains, blooms
         spawn :fish                 🐟 water only        spawn :lily     🪷 water
         spawn :hawk                 🦅 flies anywhere    spawn :cactus   🌵 :mushroom 🍄 too
@@ -612,7 +666,7 @@ module Terra
         let_there_be :rain          command the sky: :rain :snow :storm :clear
                                     (it also shifts on its own as days pass — the map
                                      header IS the forecast; rain feeds plants, snow
-                                     stills them, storms throw wild lightning)
+                                     stills them, storm lightning spreads fire briefly)
         world.animals / world.plants                 everything alive, as arrays
         world.rabbits / world.lilies / world.wolves  the plural of any species works
 
@@ -622,7 +676,7 @@ module Terra
 
         Invent species — new entries in an open registry:
           ordain :wolf, emoji: "🐺", habitat: :land, speed: 3
-          ordain :bramble, emoji: "🌾", grows_on: [:sand], spread: 0.05, lifespan: 40
+          ordain :bramble, emoji: "🌾", grows_on: [:sand], spread: 0.05, spread_limit: 3, lifespan: 40
 
         🔒 Level 3: Providence — Enumerable as divine power
       SHEET
@@ -644,7 +698,7 @@ module Terra
 
     # Reads world state and suggests the next sensible act.
     def situation
-      return ["🧊 This world is frozen — permanently. Write chronicle!, then big_bang!."] if world.frozen?
+      return ["🥶 The Great Freeze has ended this world. Write chronicle!, then big_bang!."] if world.frozen?
 
       if !world.lit?
         return ["🌑 Darkness. The world waits beneath, intact.", "   → let_there_be :light"] if world.day.positive? || world.features.any?
@@ -734,12 +788,12 @@ module Terra
       born.one? ? born.first : born
     end
 
-    # Shown when any power is used on a world someone called `freeze` on.
+    # Shown when any power is used after the Great Freeze.
     def frozen_lament
       puts <<~MSG
-        🧊 The world is frozen in time. Nothing answers you.
-        That was Ruby's own Object#freeze — it makes an object permanently
-        immutable. There is no unfreeze; there never has been.
+        🥶 The Great Freeze has ended this world. Nothing answers you.
+        World#freeze called `super`, reaching Ruby's Object#freeze: permanent,
+        shallow immutability. There is no unfreeze; there never has been.
         Speak `big_bang!` to abandon this universe and begin again.
       MSG
     end

@@ -16,7 +16,7 @@ module Terra
       volcano:  "🌋",
       forest:   "🌲",
       sand:     "🟨",
-      scorched: "🔥",
+      scorched: "◾",
     }.freeze
 
     attr_reader :x, :y, :world
@@ -30,7 +30,7 @@ module Terra
       @feature = nil
     end
 
-    def emoji = EMOJI.fetch(terrain)
+    def emoji = world&.burning?(self) ? "🔥" : EMOJI.fetch(terrain)
 
     def scorch! = self.terrain = :scorched
 

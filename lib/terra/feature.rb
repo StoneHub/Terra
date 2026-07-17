@@ -78,23 +78,23 @@ module Terra
     manifest_as :lake, emoji: "🌊", terrain: :water,
                 names: ["Stillwater", "Mirrormere", "Lake Umber"]
 
-    def frozen? = tiles.all? { |t| t.terrain == :ice }
+    def iced_over? = tiles.all? { |t| t.terrain == :ice }
 
-    # Trailing `!` signals "mutates / has teeth". (No relation to
-    # Object#freeze, which locks a Ruby object against modification.)
-    def freeze!
-      tiles.each { |t| t.terrain = :ice }
+    # These are physical water-state mutations, deliberately named without
+    # "freeze" so Lake does not hide Ruby's real Object#freeze/#frozen?.
+    def ice_over!
+      tiles.each { |t| t.terrain = :ice if t.terrain == :water }
       world.behold!
       self
     end
 
     def thaw!
-      tiles.each { |t| t.terrain = :water }
+      tiles.each { |t| t.terrain = :water if t.terrain == :ice }
       world.behold!
       self
     end
 
-    def emoji = frozen? ? "🧊" : super
+    def emoji = iced_over? ? "🧊" : super
   end
 
   class Mountain < Feature
