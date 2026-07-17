@@ -37,8 +37,6 @@ lake = spawn :lake, at: [3, 4], size: 2
 river = spawn :river, at: [0, 6], length: world.width, width: 2
 mtn = spawn :mountain, name: "The Old Tooth", size: 3
 mtn.erupt!
-mythologize lake                           # Apple generates a validated name + lore locally
-omen                                       # one world-aware prophecy; story only
 let_there_be :life
 spawn :rabbit, count: 3
 spawn :fern
@@ -105,13 +103,3 @@ raw array, queryable like everything else.
 - **Level 2 — Life** ✅ (you are here): `let_there_be :life`, tick-based time via `pass`, creatures with block-defined brains, bounded ecology and fire, terrain-aware `sow`, weather, reversible `winter!`/`spring!`, and the irreversible Great Freeze
 - **Level 3 — Providence**: Enumerable queries as divine power (`world.animals.select(&:hungry)...`)
 - **Level 4 — Godhood**: reopen classes mid-game; rabbits learn to fly
-
-## Local imagination
-
-On Apple Silicon, `mythologize feature` and `omen` use Apple's on-device
-Foundation Models framework as the primary backend. The first request compiles
-and caches Terra's small Swift bridge; later sessions reuse it. Static
-dictionaries remain the clearly labeled offline fallback, prompt anchors, and
-deterministic test fixtures. Ruby stays authoritative for simulation state and
-commands, and `chronicle!` simply exports the recorded history without asking
-the model to add prose.

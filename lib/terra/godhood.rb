@@ -162,19 +162,6 @@ module Terra
           chronicle           recent acts       chronicle!    the illuminated HTML
           world.history       raw entries: { day:, note:, map: }
       TXT
-      mythologize: <<~TXT,
-        mythologize — ask Apple's on-device model for a name and one-line myth.
-          mythologize lake              a live landform reference is precise
-          mythologize "Mirkwood"        a unique name works too
-        The validated name becomes the landform's name and its lore enters the chronicle.
-        Generated words never execute or change simulation rules.
-        A clearly labeled static myth answers if the local model is unavailable.
-      TXT
-      omen: <<~TXT,
-        omen — ask the local model to read the world and speak one short prophecy.
-          omen                         uses landforms, life, weather, season, and recent acts
-        The omen enters the chronicle as prose; it cannot issue commands or alter state.
-      TXT
       darkness: <<~TXT,
         darkness — the reversible night. let_there_be :darkness hides the world
         (all ⬛) and time refuses to pass; let_there_be :light restores it exactly.
@@ -442,49 +429,6 @@ module Terra
       nil
     end
 
-    # Adds untrusted generated words to the chronicle, never to the simulation.
-    # A provider is injectable so tests and non-Apple environments stay local
-    # and deterministic without pretending to have exercised Apple's model.
-    def mythologize(feature, provider: Imagination.default_provider)
-      target = case feature
-               when Feature then feature if world.features.include?(feature)
-               when Symbol, String
-                 matches = resolve_by_name(feature).grep(Feature)
-                 matches.one? ? matches.first : nil
-               end
-
-      unless target
-        return puts(%(Choose one existing landform: mythologize lake · mythologize "Mirkwood" · mythologize world.features.first))
-      end
-
-      context = Imagination.context_for(target, world)
-      myth = provider.mythologize(context: context)
-      old_title = target.title
-      target.name = myth.name
-      note = %(🔮 #{old_title} is mythologized as #{target.title} — #{myth.lore})
-      world.record!(note)
-      puts note
-      puts "   Static fallback: #{myth.fallback_reason}" if myth.fallback_reason
-      myth
-    rescue Imagination::Error => e
-      puts "The local muse is silent: #{e.message}"
-      nil
-    end
-
-    # Reads a frozen data snapshot and records words only. The provider never
-    # receives World, Feature, or Being objects and cannot invoke game commands.
-    def omen(provider: Imagination.default_provider)
-      passage = provider.omen(context: Imagination.context_for_world(world))
-      note = "☄️ Omen (story only) — #{passage.text}"
-      world.record!(note)
-      puts note
-      puts "   Static fallback: #{passage.fallback_reason}" if passage.fallback_reason
-      passage
-    rescue Imagination::Error => e
-      puts "The local muse is silent: #{e.message}"
-      nil
-    end
-
     # Reversible climate powers. These mutate simulation state and are not
     # Ruby Object#freeze; their seasonal names keep that distinction visible.
     def winter!
@@ -650,8 +594,6 @@ module Terra
         world / behold      the map                      world.at(x, y)   one tile
         world.features      everything you have made     world.history    every recorded act
         chronicle / chronicle!                           the story so far / written as HTML
-        mythologize world.features.first                 local name + lore; renames content only
-        omen                                             prophecy grounded in the live world
         inspire / inspire :all                           a worked example when you're stuck
         guide / guide :smite                             where you stand + chapters of help
         companion                                        open the illustrated HTML manual
