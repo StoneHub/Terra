@@ -1,2 +1,21 @@
 #!/usr/bin/env bash
-cd "$(dirname "$0")/.." && exec irb -I lib -r terra/session
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
+
+if command -v mise >/dev/null 2>&1; then
+  if ! MISE_RUBY_COMPILE=false mise where ruby@3.4.10 >/dev/null 2>&1; then
+    echo "Terra's Ruby is not installed. Run: bin/setup" >&2
+    exit 1
+  fi
+  exec mise exec ruby@3.4.10 -- ruby bin/play.rb
+fi
+
+if ! command -v ruby >/dev/null 2>&1 || \
+   ! ruby -e 'major, minor = RUBY_VERSION.split(".").map(&:to_i); exit(major > 3 || (major == 3 && minor >= 1) ? 0 : 1)'; then
+  echo "Terra requires Ruby 3.1 or newer. Run: bin/setup" >&2
+  exit 1
+fi
+
+exec ruby bin/play.rb

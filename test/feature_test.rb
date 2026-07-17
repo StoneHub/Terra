@@ -36,6 +36,16 @@ class FeatureTest < Minitest::Test
     refute lake.frozen?
   end
 
+  def test_landforms_are_queryable_by_plural_kind
+    lake = quietly { god.spawn :lake, at: [3, 3] }
+    mountain = quietly { god.spawn :mountain, at: [8, 5] }
+
+    assert_respond_to world, :lakes
+    assert_respond_to world, :mountains
+    assert_equal [lake], world.lakes
+    assert_equal [mountain], world.mountains
+  end
+
   def test_mountain_erupts_with_a_scorched_ring
     mtn = quietly { god.spawn :mountain, at: [6, 4], size: 2 }
     quietly { mtn.erupt! }
