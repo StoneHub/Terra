@@ -34,6 +34,7 @@ Then, as is tradition:
 eden!                                      # or skip straight to a pre-filled world…
 let_there_be :light                        # …or build one yourself, from the dark
 lake = spawn :lake, at: [3, 4], size: 2
+river = spawn :river, at: [0, 6], length: world.width, width: 2
 mtn = spawn :mountain, name: "The Old Tooth", size: 3
 mtn.erupt!
 mythologize lake                           # Apple generates a validated name + lore locally
@@ -64,7 +65,7 @@ great_freeze!                              # heat death through Ruby's real Obje
 
 | You do | You learn |
 |---|---|
-| `spawn :lake, at: [3,4]` | symbols, keyword args, defaults |
+| `spawn :river, length: 12, width: 2` | symbols, keyword args, shape-specific dimensions |
 | `lake.name = "Mirrormere"` | `attr_accessor`, objects are always live |
 | `lake.ice_over!`, `lake.iced_over?` | `!`/`?` naming conventions without hiding Ruby's `freeze` API |
 | `world.at(3, 4)` at the prompt | `inspect` is IRB's UI — every echo is a render |
@@ -83,7 +84,7 @@ bin/terra              launcher (selects the project Ruby, then starts IRB)
 lib/terra.rb           engine entry + Terra.genesis
 lib/terra/world.rb     the grid; time, weather, bounded fire, render/illuminate!/tiles_near
 lib/terra/tile.rb      one square: terrain symbol + owning feature
-lib/terra/feature.rb   Lake/Mountain/Forest/Desert + manifest_as registry
+lib/terra/feature.rb   Lake/River/Mountain/Forest/Desert + manifest_as registry
 lib/terra/being.rb     base class for living things (tick/age/die!)
 lib/terra/animal.rb    🐇🐢🐟🦅 habitats, speed, wander/hop_toward, divine brains
 lib/terra/plant.rb     🌿🌼🪷 finite per-seed colonies, lifespan, quiet deaths

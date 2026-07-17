@@ -102,7 +102,8 @@ module Terra
       spawn: <<~TXT,
         spawn — bring things into being. Returns the thing; hold it.
           spawn :lake, at: [4, 3], size: 3, name: "Mirrormere"   (all kwargs optional)
-          landforms: :lake :mountain :forest :desert :grassland (🌾 = green grass)
+          spawn :river, at: [0, 4], length: world.width, width: 2
+          landforms: :lake :river :mountain :forest :desert :grassland (🌾 = green grass)
           spawn :rabbit, count: 5              creatures need `let_there_be :life`
           spawn(:rabbit) { |r| r.wander }      a block becomes its brain (parens!)
         terraform :meadow — repaint every barren 🟫 tile at once (:sand, :water, …)
@@ -320,7 +321,7 @@ module Terra
     # brace block needs parens — spawn(:rabbit) { |r| ... } — while do…end
     # works without them. NB: this shadows Kernel#spawn (process launching)
     # at the prompt, which is exactly what we want.
-    def spawn(kind, at: nil, size: 2, name: nil, count: 1, &brain)
+    def spawn(kind, at: nil, size: 2, name: nil, count: 1, length: nil, width: nil, &brain)
       return frozen_lament if world.frozen?
 
       unless world.lit?
@@ -328,8 +329,15 @@ module Terra
         return
       end
 
+      if kind != :river && (!length.nil? || !width.nil?)
+        return puts("`length:` and `width:` shape rivers only. Try: spawn :river, length: world.width, width: 2")
+      end
+
       if (klass = Feature::REGISTRY[kind])
-        feature = klass.create(world: world, at: at, size: size, name: name)
+        shape = { world: world, at: at, size: size, name: name }
+        shape[:length] = length unless length.nil?
+        shape[:width] = width unless width.nil?
+        feature = klass.create(**shape)
         world.behold!
         feature
       elsif Animal::KINDS.key?(kind) || Plant::KINDS.key?(kind)
@@ -629,6 +637,7 @@ module Terra
         let_there_be :darkness                           withdraw it — a reversible night
         winter! / spring!                                reversible world climate
         spawn :lake, at: [4, 3], size: 2, name: "…"      also :mountain :forest :desert
+        spawn :river, at: [0, 4], length: 12, width: 2   🌊 connected water across the map
         spawn :grassland                                 🌾 green grass (:meadow) on demand
         terraform :meadow                                repaint ALL barren 🟫 — any terrain
         smite at: [x, y] / smite 5, 1                    🔥 the place — starts a small fire

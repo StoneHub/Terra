@@ -480,7 +480,8 @@ chronicle!</pre>
       <table>
         <tr><th>Invocation</th><th>Effect</th></tr>
         <tr><td><code>let_there_be :light</code></td><td>Begin creation. Nothing can be spawned in the void.</td></tr>
-        <tr><td><code>spawn :lake, at: [x, y], size: 2, name: "…"</code></td><td>Create a landform; all keywords optional. Kinds: <code>:lake :mountain :forest :desert :grassland</code>. Returns the thing itself.</td></tr>
+        <tr><td><code>spawn :lake, at: [x, y], size: 2, name: "…"</code></td><td>Create a landform; all keywords optional. Kinds: <code>:lake :river :mountain :forest :desert :grassland</code>. Returns the thing itself.</td></tr>
+        <tr><td><code>spawn :river, at: [0, 4], length: world.width, width: 2</code></td><td>Run connected 🌊 water across the map. <code>length:</code> controls its traversal and <code>width:</code> controls its water band.</td></tr>
         <tr><td><code>terraform :meadow</code></td><td>Repaint <strong>every remaining barren 🟫 tile</strong> as one terrain (<code>:sand</code>, <code>:water</code>, <code>:forest</code>…). Claimed and grown land is untouched — it fills the gaps between your works. <code>terraform :water</code> makes an ocean world; land animals will regret it.</td></tr>
         <tr><td><code>let_there_be :darkness</code></td><td>Withdraw the light. The world hides (all ⬛) and time refuses to pass — but nothing is destroyed. <code>let_there_be :light</code> restores it exactly. A boolean pauses; the Great Freeze ends.</td></tr>
         <tr><td><code>winter!</code> / <code>spring!</code></td><td>Reversible global climate. Winter ices water, extinguishes fire, holds snow, and traps fish; spring thaws only the water that winter claimed.</td></tr>
@@ -515,6 +516,11 @@ chronicle!</pre>
         <h3><span class="glyph">🌊</span>Lake</h3>
         <p><code>lake.ice_over!</code> → 🧊 &nbsp; <code>lake.thaw!</code> &nbsp; <code>lake.iced_over?</code></p>
         <p>Default names: Stillwater, Mirrormere, Lake Umber.</p>
+      </div>
+      <div class="card">
+        <h3><span class="glyph">🌊</span>River</h3>
+        <p><code>spawn :river, length: world.width, width: 2</code> — connected water whose path, not its emoji, makes it a river.</p>
+        <p>Rivers inherit <code>ice_over!</code>, <code>thaw!</code>, and <code>iced_over?</code> from Lake.</p>
       </div>
       <div class="card">
         <h3><span class="glyph">⛰️</span>Mountain</h3>

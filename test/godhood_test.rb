@@ -141,6 +141,21 @@ class GodhoodTest < Minitest::Test
     assert_includes out, "🔓"
   end
 
+  def test_river_dimensions_are_not_silently_accepted_by_other_spawns
+    lit_world!
+    out, = capture_io { @result = god.spawn :lake, width: 2 }
+    assert_nil @result
+    assert_includes out, "shape rivers only"
+
+    out, = capture_io { @result = god.spawn :rabbit, length: 4 }
+    assert_nil @result
+    assert_includes out, "shape rivers only"
+
+    out, = capture_io { god.guide :spawn }
+    assert_includes out, "spawn :river"
+    assert_includes out, "width: 2"
+  end
+
   def test_companion_opens_the_local_manual
     opened = nil
     out, = capture_io { god.companion(opener: ->(p) { opened = p; true }) }

@@ -81,6 +81,7 @@ module Terra
     class StaticProvider
       LORE = {
         lake: "Still water keeps the sky's oldest secret beneath its silver face.",
+        river: "Running water carries every mountain's rumor toward a sea it has never seen.",
         mountain: "The peak remembers the first thunder and answers only in stone.",
         forest: "Every root shares one dream, and every leaf whispers a different ending.",
         desert: "The wind erases each road so pilgrims must choose their purpose again.",
