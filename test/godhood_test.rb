@@ -112,22 +112,48 @@ class GodhoodTest < Minitest::Test
 
   def test_frozen_worlds_refuse_everything_but_escape
     lit_world!
-    world.freeze
+    quietly { god.great_freeze! }
     out, = capture_io { god.spawn :lake }
-    assert_includes out, "frozen in time"
+    assert_includes out, "Great Freeze"
     quietly { god.big_bang! }
     refute world.frozen?
   end
 
+  def test_great_freeze_is_the_story_command_for_object_freeze
+    lit_world!
+    world.lightning!(world.at(2, 2))
+    out, = capture_io { god.great_freeze! }
+    assert world.frozen?
+    assert_equal :great_freeze, world.ending
+    assert_empty world.fires
+    assert_includes out, "world.frozen?"
+    assert_includes out, "Great Freeze"
+  end
+
   def test_powers_shows_every_command_even_before_life
     out, = capture_io { god.powers }
-    %w[sow pass terraform ordain chronicle inspire guide companion big_bang! eden! unmake smite].each do |cmd|
+    %w[sow pass terraform ordain chronicle inspire guide companion big_bang! great_freeze! winter! spring! eden! unmake smite].each do |cmd|
       assert_includes out, cmd
     end
     assert_includes out, "🔒 sleeping"
     live_world!
     out, = capture_io { god.powers }
     assert_includes out, "🔓"
+  end
+
+  def test_river_dimensions_are_not_silently_accepted_by_other_spawns
+    lit_world!
+    out, = capture_io { @result = god.spawn :lake, width: 2 }
+    assert_nil @result
+    assert_includes out, "shape rivers only"
+
+    out, = capture_io { @result = god.spawn :rabbit, length: 4 }
+    assert_nil @result
+    assert_includes out, "shape rivers only"
+
+    out, = capture_io { god.guide :spawn }
+    assert_includes out, "spawn :river"
+    assert_includes out, "width: 2"
   end
 
   def test_companion_opens_the_local_manual
@@ -156,7 +182,7 @@ class GodhoodTest < Minitest::Test
     out, = capture_io { god.guide }
     assert_includes out, "pass 7"
 
-    world.freeze
+    quietly { god.great_freeze! }
     out, = capture_io { god.guide }
     assert_includes out, "big_bang!"
   end

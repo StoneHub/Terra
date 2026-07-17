@@ -26,14 +26,69 @@ class FeatureTest < Minitest::Test
     assert_equal "Custom", lake.name
   end
 
-  def test_lake_freezes_and_thaws
+  def test_lake_ices_over_and_thaws_without_ruby_freezing
     lake = quietly { god.spawn :lake, at: [5, 4] }
-    quietly { lake.freeze! }
-    assert lake.frozen?
+    quietly { lake.ice_over! }
+    assert lake.iced_over?
+    refute lake.frozen?, "physical ice must not shadow Object#frozen?"
     assert_equal "🧊", lake.emoji
     assert(lake.tiles.all? { |t| t.terrain == :ice })
     quietly { lake.thaw! }
-    refute lake.frozen?
+    refute lake.iced_over?
+  end
+
+  def test_ice_over_and_thaw_do_not_heal_non_water_tiles
+    lake = quietly { god.spawn :lake, at: [5, 4], size: 2 }
+    burned = lake.tiles.first
+    claimed_elsewhere = lake.tiles.last
+    burned.scorch!
+    claimed_elsewhere.terrain = :sand
+
+    quietly { lake.ice_over! }
+    quietly { lake.thaw! }
+
+    assert_equal :scorched, burned.terrain
+    assert_equal :sand, claimed_elsewhere.terrain
+  end
+
+  def test_river_is_connected_lake_water_with_length_and_width
+    river = quietly do
+      god.spawn :river, at: [0, 4], length: world.width, width: 3, name: "The Silver Run"
+    end
+
+    assert_kind_of Terra::Lake, river
+    assert_equal "🌊", river.emoji
+    assert_equal world.width, river.length
+    assert_equal 3, river.width
+    assert_equal (0...world.width).to_a, river.tiles.map(&:x).uniq.sort
+    assert river.tiles.group_by(&:x).values.all? { |column| column.size == 3 }
+    assert river.tiles.all? { |tile| tile.terrain == :water && tile.feature.equal?(river) }
+    assert_equal [river], world.rivers
+    assert_includes river.inspect, "length 12, width 3"
+
+    connected = [river.tiles.first]
+    connected.each do |tile|
+      neighbors = [[tile.x + 1, tile.y], [tile.x - 1, tile.y],
+                   [tile.x, tile.y + 1], [tile.x, tile.y - 1]]
+        .filter_map { |x, y| world.at(x, y) }
+        .select { |neighbor| river.tiles.include?(neighbor) }
+      connected.concat(neighbors - connected)
+    end
+    assert_equal river.tiles.sort_by { |tile| [tile.x, tile.y] },
+                 connected.sort_by { |tile| [tile.x, tile.y] }
+
+    quietly { river.ice_over! }
+    assert river.iced_over?
+    quietly { river.thaw! }
+    assert river.tiles.all? { |tile| tile.terrain == :water }
+  end
+
+  def test_river_rejects_impossible_dimensions
+    assert_raises(ArgumentError) { quietly { god.spawn :river, width: 0 } }
+    assert_raises(ArgumentError) { quietly { god.spawn :river, at: [world.width, 4] } }
+    assert_raises(ArgumentError) do
+      quietly { god.spawn :river, at: [2, 4], length: world.width }
+    end
   end
 
   def test_landforms_are_queryable_by_plural_kind

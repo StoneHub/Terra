@@ -23,7 +23,7 @@ class LifeTest < Minitest::Test
     world.advance!(10)
     assert_equal :water, fish.tile.terrain
 
-    quietly { lake.freeze! }
+    quietly { lake.ice_over! }
     spot = fish.pos
     world.advance!(5)
     assert_equal spot, fish.pos, "fish should be trapped under ice"
@@ -64,6 +64,34 @@ class LifeTest < Minitest::Test
     quietly { god.spawn :flower, at: [4, 4] }
     world.advance!(30)
     assert(world.plants.all? { |p| p.age <= p.lifespan + 1 })
+  end
+
+  def test_one_seed_can_only_fill_its_finite_colony_budget
+    Terra::Plant.ordain(:test_vine, emoji: "🫛", grows_on: %i[plains meadow],
+                        spread: 1.0, spread_limit: 3, lifespan: 100)
+    root = quietly { god.spawn :test_vine, at: [4, 4] }
+
+    10.times { world.plants.dup.each(&:tick) }
+
+    assert_equal 4, world.test_vines.size, "the root plus three descendants is the hard ceiling"
+    assert_equal 0, root.spread_remaining
+    assert(world.test_vines.all? { |plant| plant.spread_remaining.zero? })
+  ensure
+    Terra::Plant::KINDS.delete(:test_vine)
+  end
+
+  def test_separate_root_seeds_have_separate_colony_budgets
+    Terra::Plant.ordain(:test_clover, emoji: "☘️", grows_on: %i[plains meadow],
+                        spread: 1.0, spread_limit: 2, lifespan: 100)
+    first = quietly { god.spawn :test_clover, at: [2, 2] }
+    second = quietly { god.spawn :test_clover, at: [9, 6] }
+
+    first.send(:seed_neighbor)
+
+    assert_equal 1, first.spread_remaining
+    assert_equal 2, second.spread_remaining
+  ensure
+    Terra::Plant::KINDS.delete(:test_clover)
   end
 
   def test_smite_leaves_remains_that_fade

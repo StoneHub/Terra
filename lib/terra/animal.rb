@@ -19,7 +19,7 @@ module Terra
       kind
     end
 
-    # What each habitat can walk on. Note fish cannot cross :ice — freeze a
+    # What each habitat can walk on. Note fish cannot cross :ice — ice over a
     # lake and everything in it waits for a thaw that may never come.
     PASSABLE = {
       land:  %i[plains meadow forest sand],
@@ -37,7 +37,9 @@ module Terra
     # Where a newborn can appear; nil when the world has no such ground.
     def self.cradle(world:, kind:)
       habitat = KINDS.fetch(kind)[:habitat]
-      spot = world.tiles.select { |t| PASSABLE.fetch(habitat).include?(t.terrain) }.sample
+      spot = world.tiles.select do |t|
+        PASSABLE.fetch(habitat).include?(t.terrain) && !world.burning?(t)
+      end.sample
       spot && [spot.x, spot.y]
     end
 
@@ -86,7 +88,7 @@ module Terra
            .min_by { |t| (t.x - x).abs + (t.y - y).abs }
     end
 
-    def passable?(t) = PASSABLE.fetch(habitat).include?(t.terrain)
+    def passable?(t) = PASSABLE.fetch(habitat).include?(t.terrain) && !world.burning?(t)
 
     def inspect
       mind = brain ? "divine brain" : "instinct"

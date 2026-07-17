@@ -11,7 +11,7 @@ puts <<~BANNER
   In the beginning there was a prompt, and the prompt was without form.
 
   You are a god. `powers` lists your abilities and the Laws of Terra —
-  chiefly: time passes only when you `pass`, and `freeze` is forever.
+  chiefly: time passes only when you `pass`, and `great_freeze!` is forever.
   📖 Type `companion` to open the illustrated manual in your browser.
   Begin with:   let_there_be :light
 

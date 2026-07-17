@@ -234,7 +234,7 @@
 
   <section id="laws">
     <h2>The laws of Terra</h2>
-    <p class="section-note">Three rules govern everything below — and all three are real Ruby, not game fiction.</p>
+    <p class="section-note">Four rules govern everything below — and the final one is real Ruby, not game fiction.</p>
     <div class="cards">
       <div class="card">
         <h3>⚡ The echo is the UI</h3>
@@ -245,8 +245,12 @@
         <p>There is no engine loop. Nothing moves until you spend days explicitly: <code>pass</code> for one, <code>pass 7</code> for a week. Between commands the world is a photograph.</p>
       </div>
       <div class="card">
-        <h3>🧊 Freeze is forever</h3>
-        <p><code>world.freeze</code> invokes Ruby's real <code>Object#freeze</code>: permanent immutability. The map ices over, every power refuses you, and there is no unfreeze — there never has been, in any Ruby program. <code>big_bang!</code> abandons the frozen universe for a fresh one; the old world goes to the garbage collector, which is exactly where frozen objects you're done with belong.</p>
+        <h3>❄️ Seasons are state</h3>
+        <p><code>winter!</code> and <code>spring!</code> reversibly mutate climate. <code>lake.ice_over!</code> and <code>lake.thaw!</code> do the same locally. These are game mechanics, not Ruby freezing.</p>
+      </div>
+      <div class="card">
+        <h3>🥶 The Great Freeze is forever</h3>
+        <p><code>great_freeze!</code> calls <code>World#freeze</code>. That override adds Terra's ending, then <code>super</code> deliberately invokes Ruby's real <code>Object#freeze</code>: shallow and irreversible. <code>big_bang!</code> binds a fresh World; nothing is unfrozen.</p>
       </div>
     </div>
   </section>
@@ -308,8 +312,8 @@ You are a god. Type `powers` to see your abilities.</span></pre>
         <h3>Change it after the fact</h3>
         <p>The object stays alive. Rename it with plain assignment, mutate it with its own methods — the map redraws itself after every act.</p>
         <div class="term">
-          <div class="term-bar"><span class="title">irb — terra</span><button class="copy" data-cmd="lake.freeze!">copy</button></div>
-          <pre><span class="p">&gt;&gt;</span> lake.freeze!
+          <div class="term-bar"><span class="title">irb — terra</span><button class="copy" data-cmd="lake.ice_over!">copy</button></div>
+          <pre><span class="p">&gt;&gt;</span> lake.ice_over!
 <span class="out map"> 3  🟩🟩🟩🧊🟩🟩
  4  🟩🟩🧊🧊🧊🟩
  5  🟩🟩🟩🧊🟩🟩</span>
@@ -366,10 +370,10 @@ pass 10
 pilgrim   # where did faith take it?</pre>
       </div>
       <div class="card">
-        <h3>🧊 Fimbulwinter</h3><p>Freeze every lake at once. The fish wait, trapped.</p>
-        <pre class="mono" style="font-size:0.8rem; overflow-x:auto; margin:0.5rem 0 0;">world.lakes.each(&amp;:freeze!)
+        <h3>🧊 Fimbulwinter</h3><p>Call winter across the world. The fish wait, trapped.</p>
+        <pre class="mono" style="font-size:0.8rem; overflow-x:auto; margin:0.5rem 0 0;">winter!
 pass 5    # nothing swims
-world.lakes.each(&amp;:thaw!)</pre>
+spring!</pre>
       </div>
       <div class="card">
         <h3>🌲 Mirkwood Rising</h3><p>Plant one wood, let it swallow the map.</p>
@@ -388,7 +392,7 @@ world.animals.max_by(&amp;:age)   # the elder</pre>
 smite elders</pre>
       </div>
       <div class="card">
-        <h3>🌑 Nightfall</h3><p>Darkness is a pause; freeze is an ending.</p>
+        <h3>🌑 Nightfall</h3><p>Darkness is a pause; the Great Freeze is an ending.</p>
         <pre class="mono" style="font-size:0.8rem; overflow-x:auto; margin:0.5rem 0 0;">let_there_be :darkness
 pass 3    # refused — time needs light
 let_there_be :light   # all exactly as it was</pre>
@@ -405,9 +409,9 @@ spawn(:wolf, count: 2) { |w| w.hop_toward :forest }
 pass 7</pre>
       </div>
       <div class="card">
-        <h3>💀 Doomsday</h3><p>End a world properly: memorialize, freeze, move on.</p>
-        <pre class="mono" style="font-size:0.8rem; overflow-x:auto; margin:0.5rem 0 0;">chronicle!   # write the scripture FIRST
-world.freeze
+        <h3>💀 Doomsday</h3><p>End a world properly: invoke the Great Freeze, memorialize it, move on.</p>
+        <pre class="mono" style="font-size:0.8rem; overflow-x:auto; margin:0.5rem 0 0;">great_freeze!
+chronicle!   # includes the final Great Freeze
 big_bang! width: 20, height: 12</pre>
       </div>
     </div>
@@ -462,7 +466,7 @@ chronicle!</pre>
     <div class="cards">
       <div class="card"><h3>↑ / ↓</h3><p>Walk your command history. Re-run or edit your last act of creation.</p></div>
       <div class="card"><h3><code>_</code></h3><p>The last returned value. Forgot to assign your mountain? <code>mtn = _</code> rescues it.</p></div>
-      <div class="card"><h3>Tab</h3><p>Autocomplete — press the actual Tab key. It knows the class of <em>variables</em> (<code>lake.f</code> → <code>freeze!</code>) but not of method results; for those, take a handle first: <code>w = world</code>, then <code>w.fe</code>.</p></div>
+      <div class="card"><h3>Tab</h3><p>Autocomplete — press the actual Tab key. It knows the class of <em>variables</em> (<code>lake.i</code> → <code>ice_over!</code>) but not of method results; for those, take a handle first: <code>w = world</code>, then <code>w.fe</code>.</p></div>
       <div class="card"><h3>Ctrl-C</h3><p>Abandon the line you're typing. Ctrl-D or <code>exit</code> leaves IRB entirely.</p></div>
       <div class="card"><h3>The <code>=&gt;</code> echo</h3><p>IRB prints every expression's return value. In Terra that echo <em>is</em> the UI — the map is just <code>world.inspect</code>.</p></div>
       <div class="card"><h3>Nothing persists</h3><p>Exiting ends the universe. <code>bin/terra</code> starts a fresh void every time.</p></div>
@@ -476,9 +480,11 @@ chronicle!</pre>
       <table>
         <tr><th>Invocation</th><th>Effect</th></tr>
         <tr><td><code>let_there_be :light</code></td><td>Begin creation. Nothing can be spawned in the void.</td></tr>
-        <tr><td><code>spawn :lake, at: [x, y], size: 2, name: "…"</code></td><td>Create a landform; all keywords optional. Kinds: <code>:lake :mountain :forest :desert :grassland</code>. Returns the thing itself.</td></tr>
+        <tr><td><code>spawn :lake, at: [x, y], size: 2, name: "…"</code></td><td>Create a landform; all keywords optional. Kinds: <code>:lake :river :mountain :forest :desert :grassland</code>. Returns the thing itself.</td></tr>
+        <tr><td><code>spawn :river, at: [0, 4], length: world.width, width: 2</code></td><td>Run connected 🌊 water across the map. <code>length:</code> controls its traversal and <code>width:</code> controls its water band.</td></tr>
         <tr><td><code>terraform :meadow</code></td><td>Repaint <strong>every remaining barren 🟫 tile</strong> as one terrain (<code>:sand</code>, <code>:water</code>, <code>:forest</code>…). Claimed and grown land is untouched — it fills the gaps between your works. <code>terraform :water</code> makes an ocean world; land animals will regret it.</td></tr>
-        <tr><td><code>let_there_be :darkness</code></td><td>Withdraw the light. The world hides (all ⬛) and time refuses to pass — but nothing is destroyed. <code>let_there_be :light</code> restores it exactly. The reversible cousin of <code>freeze</code>: a boolean pauses, a frozen object ends.</td></tr>
+        <tr><td><code>let_there_be :darkness</code></td><td>Withdraw the light. The world hides (all ⬛) and time refuses to pass — but nothing is destroyed. <code>let_there_be :light</code> restores it exactly. A boolean pauses; the Great Freeze ends.</td></tr>
+        <tr><td><code>winter!</code> / <code>spring!</code></td><td>Reversible global climate. Winter ices water, extinguishes fire, holds snow, and traps fish; spring thaws only the water that winter claimed.</td></tr>
         <tr><td><code>let_there_be :life</code></td><td>Unlock creatures. Needs light first.</td></tr>
         <tr><td><code>spawn :rabbit, count: 3, at: [x, y]</code></td><td>Creatures: <code>:rabbit :tortoise :fish :hawk :fern :flower :lily</code>. Add a block for a divine brain (animals only).</td></tr>
         <tr><td><code>pass</code> &nbsp;/&nbsp; <code>pass 7</code></td><td>Advance time one day / a week. The only way anything moves — and the sky shifts with it.</td></tr>
@@ -487,7 +493,8 @@ chronicle!</pre>
         <tr><td><code>smite at: [x, y]</code> / <code>smite 5, 1</code> / <code>smite wolf</code></td><td>🔥 By place or by reference — see <em>Targeting &amp; smiting</em>. Kills what it lands on.</td></tr>
         <tr><td><code>unmake :lake</code> / <code>unmake "Mirkwood"</code> / <code>unmake herd</code></td><td>Remove by kind, by name, by reference, or by array. Kind/name act only when exactly one thing matches — ambiguity lists candidates. Land reverts to plains.</td></tr>
         <tr><td><code>eden!</code> <span style="white-space:nowrap;">(<code>width:</code>/<code>height:</code> optional)</span></td><td>A new world, pre-filled: terrain, animals, plants, life unlocked. Built with the same spawns you'd type yourself.</td></tr>
-        <tr><td><code>big_bang! width: 20, height: 12</code></td><td>Unmake everything; a fresh void — larger, if you ask (max 40×30). The only exit from a frozen world, and the only way to "resize".</td></tr>
+        <tr><td><code>great_freeze!</code></td><td>Cosmological heat death. Calls <code>World#freeze</code>, whose <code>super</code> reaches Ruby's irreversible <code>Object#freeze</code>.</td></tr>
+        <tr><td><code>big_bang! width: 20, height: 12</code></td><td>Unmake everything; bind a fresh World — larger, if you ask (max 40×30). The only continuation after the Great Freeze, and the only way to "resize".</td></tr>
         <tr><td><code>ordain :wolf, emoji: "🐺", habitat: :land, speed: 3</code></td><td>Invent a species (plants: <code>grows_on: [:sand]</code> + <code>spread:</code>/<code>lifespan:</code>). See the workshop below.</td></tr>
         <tr><td><code>world</code> &nbsp;/&nbsp; <code>behold</code></td><td>Redraw the whole map.</td></tr>
         <tr><td><code>world.at(x, y)</code></td><td>Inspect one tile — terrain, coordinates, owner.</td></tr>
@@ -507,8 +514,13 @@ chronicle!</pre>
     <div class="cards">
       <div class="card">
         <h3><span class="glyph">🌊</span>Lake</h3>
-        <p><code>lake.freeze!</code> → 🧊 &nbsp; <code>lake.thaw!</code> &nbsp; <code>lake.frozen?</code></p>
+        <p><code>lake.ice_over!</code> → 🧊 &nbsp; <code>lake.thaw!</code> &nbsp; <code>lake.iced_over?</code></p>
         <p>Default names: Stillwater, Mirrormere, Lake Umber.</p>
+      </div>
+      <div class="card">
+        <h3><span class="glyph">🌊</span>River</h3>
+        <p><code>spawn :river, length: world.width, width: 2</code> — connected water whose path, not its emoji, makes it a river.</p>
+        <p>Rivers inherit <code>ice_over!</code>, <code>thaw!</code>, and <code>iced_over?</code> from Lake.</p>
       </div>
       <div class="card">
         <h3><span class="glyph">⛰️</span>Mountain</h3>
@@ -544,7 +556,7 @@ chronicle!</pre>
         <tr><th>Spawn</th><th>Habitat</th><th>Speed</th><th>Temperament</th></tr>
         <tr><td class="legend-emoji">🐇 <code>:rabbit</code></td><td>land</td><td>2 tiles/day</td><td>Quick, aimless, everywhere.</td></tr>
         <tr><td class="legend-emoji">🐢 <code>:tortoise</code></td><td>land</td><td>1 tile/day</td><td>Gets there eventually.</td></tr>
-        <tr><td class="legend-emoji">🐟 <code>:fish</code></td><td>water only</td><td>1 tile/day</td><td>Cannot cross ice. Freeze its lake and it waits, patiently, for a thaw that may never come.</td></tr>
+        <tr><td class="legend-emoji">🐟 <code>:fish</code></td><td>water only</td><td>1 tile/day</td><td>Cannot cross ice. Ice over its lake and it waits, patiently, for a thaw that may never come.</td></tr>
         <tr><td class="legend-emoji">🦅 <code>:hawk</code></td><td>air — anywhere</td><td>3 tiles/day</td><td>Terrain means nothing to it.</td></tr>
       </table>
     </div>
@@ -671,7 +683,7 @@ chronicle!</pre>
     <p>Animal knobs: <code>habitat:</code> (<code>:land</code> / <code>:water</code> / <code>:air</code>) and <code>speed:</code> (tiles per day). Plant knobs: <code>grows_on:</code> (terrain list), <code>spread:</code> (0–1 chance per day), <code>lifespan:</code> (days).</p>
 
     <h3 style="font-size:1.1rem; margin:1.5rem 0 0.5rem;">Write the scripture</h3>
-    <p>Every act — genesis, spawns, smitings, the passing of days, even <code>freeze</code> itself — is recorded with a map snapshot. <code>chronicle</code> prints the recent past; <code>chronicle!</code> renders the whole history to <code>terra-chronicle.html</code>, an illuminated page you can open in a browser or keep as a memorial to a frozen world. Under the hood it's ERB — the same stdlib templating Rails views are made of; read <code>lib/terra/chronicle.html.erb</code> to see Ruby woven into markup.</p>
+    <p>Every act — genesis, spawns, smitings, the passing of days, even the Great Freeze — is recorded with a map snapshot. <code>chronicle</code> prints the recent past; <code>chronicle!</code> renders the whole history to <code>terra-chronicle.html</code>, an illuminated page you can open in a browser or keep as a memorial to an ended world. Under the hood it's ERB — the same stdlib templating Rails views are made of; read <code>lib/terra/chronicle.html.erb</code> to see Ruby woven into markup.</p>
     <div class="term">
       <div class="term-bar"><span class="title">irb — terra</span><button class="copy" data-cmd="chronicle!">copy</button></div>
       <pre><span class="p">&gt;&gt;</span> chronicle
@@ -764,7 +776,7 @@ Day   5 — ⚡ Lightning strikes (3, 3) — 🌿 The smite claims the fern.</sp
         <tr><td class="legend-emoji">⬛</td><td>void / darkness</td><td>Before light — or after <code>let_there_be :darkness</code>.</td></tr>
         <tr><td class="legend-emoji">🟫</td><td>plains</td><td>Barren earth. What light makes; the blank canvas.</td></tr>
         <tr><td class="legend-emoji">🟩</td><td>meadow</td><td>What life leaves. Any earth a plant takes root in turns green — and stays green after the plant dies. The land remembers.</td></tr>
-        <tr><td class="legend-emoji">🌊 🧊</td><td>water / ice</td><td><code>spawn :lake</code>, then <code>freeze!</code> / <code>thaw!</code></td></tr>
+        <tr><td class="legend-emoji">🌊 🧊</td><td>water / ice</td><td><code>spawn :lake</code>, then <code>ice_over!</code> / <code>thaw!</code>; or <code>winter!</code> / <code>spring!</code></td></tr>
         <tr><td class="legend-emoji">⛰️ 🌋</td><td>mountain / volcano</td><td><code>spawn :mountain</code>, then <code>erupt!</code></td></tr>
         <tr><td class="legend-emoji">🌲</td><td>forest</td><td><code>spawn :forest</code>; spreads with <code>grow!</code></td></tr>
         <tr><td class="legend-emoji">🟨</td><td>sand</td><td><code>spawn :desert</code></td></tr>
@@ -784,12 +796,12 @@ Day   5 — ⚡ Lightning strikes (3, 3) — 🌿 The smite claims the fern.</sp
         <tr><td><code>:lake</code></td><td>Symbol — interned name, compared by identity</td><td>enum entry / sealed object</td></tr>
         <tr><td><code>at: [3, 4], size: 2</code></td><td>Keyword arguments with defaults</td><td>named params with defaults</td></tr>
         <tr><td><code>lake.name = "…"</code></td><td><code>attr_accessor</code> — one line generates getter + setter</td><td><code>var</code> property</td></tr>
-        <tr><td><code>lake.freeze!</code></td><td>Trailing <code>!</code> — convention for "mutates / has teeth"</td><td>no equivalent — pure naming culture</td></tr>
-        <tr><td><code>lake.frozen?</code></td><td>Trailing <code>?</code> — convention for predicates</td><td><code>isFrozen</code></td></tr>
+        <tr><td><code>lake.ice_over!</code></td><td>Trailing <code>!</code> — convention for "mutates / has teeth"</td><td>no equivalent — pure naming culture</td></tr>
+        <tr><td><code>lake.iced_over?</code></td><td>Trailing <code>?</code> — convention for predicates, without hiding <code>Object#frozen?</code></td><td><code>isIcedOver</code></td></tr>
         <tr><td><code>world.at(3, 4)</code> echoing a description</td><td><code>inspect</code> — every object describes itself; IRB prints it</td><td><code>toString()</code>, but load-bearing</td></tr>
         <tr><td><code>spawn</code> working bare at the prompt</td><td><code>extend</code> — a module grafted onto one object (IRB's <code>main</code>)</td><td>extension functions, scoped to an instance</td></tr>
         <tr><td><code>spawn(:rabbit) { |r| … }</code></td><td>blocks — behavior passed as an argument, captured with <code>&amp;brain</code></td><td>trailing lambda, but needing parens here</td></tr>
-        <tr><td><code>world.freeze</code></td><td><code>Object#freeze</code> — real, shallow, irreversible immutability</td><td>closest cousin: <code>val</code>, but at runtime and forever</td></tr>
+        <tr><td><code>great_freeze!</code> → <code>World#freeze</code> → <code>super</code></td><td>Override to add behavior, then preserve the superclass contract by invoking <code>Object#freeze</code></td><td><code>super</code>, with Ruby's dynamic method lookup</td></tr>
         <tr><td><code>world.animals.grep(Animal)</code> internals</td><td><code>grep</code> selects by <code>===</code>; a Class matches its instances</td><td><code>filterIsInstance&lt;Animal&gt;()</code></td></tr>
         <tr><td><code>ordain :wolf, …</code></td><td>a registry is just an open Hash — new "types" are data, added at runtime</td><td>a sealed hierarchy would refuse; here openness is the point</td></tr>
         <tr><td><code>world.wolves</code> existing at all</td><td><code>method_missing</code> + <code>respond_to_missing?</code> — the hook Rails built find_by_name on</td><td>no equivalent; the closest is a delegate, at compile time</td></tr>
@@ -798,9 +810,10 @@ Day   5 — ⚡ Lightning strikes (3, 3) — 🌿 The smite claims the fern.</sp
   </section>
 
   <section id="locked" class="locked">
-    <h2>Locked tiers</h2>
-    <p class="section-note">Powers you have not yet earned.</p>
+    <h2>Local imagination and next tiers</h2>
+    <p class="section-note">Apple's local storytelling is available now; the higher simulation tiers are still ahead.</p>
     <div class="cards">
+      <div class="card"><h3>✨ Local Imagination</h3><p><code>mythologize lake</code> asks Apple Foundation Models for a validated name and lore; <code>omen</code> speaks one world-aware prophecy. Static text is the labeled offline fallback, Ruby remains authoritative, and <code>chronicle!</code> only exports recorded history.</p></div>
       <div class="card"><h3>🔒 Level 3 — Providence</h3><p>Enumerable as divine power: bless and smite by query. <code>world.animals.select { … }</code> is already whispering it.</p></div>
       <div class="card"><h3>🔒 Level 4 — Godhood</h3><p>Reopen classes on a living world. Rabbits learn to fly.</p></div>
     </div>
