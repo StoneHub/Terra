@@ -1,12 +1,23 @@
 # Terra 🌍
 
+[![Mac CI](../../actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
+
 A god game played entirely from IRB. The prompt is the controller; the map is
 whatever your expressions return.
+
+<p align="center">
+  <img src="docs/gameplay.svg" width="420" alt="A Terra session: eden!, rabbits with divine brains, a smite, winter and spring">
+  <img src="docs/eden.svg" width="330" alt="An eden! world — lakes, mountains, forest, creatures, on a 12 by 9 emoji map">
+</p>
+
+<p align="center"><em>Left: a real session on loop — <code>eden!</code>, pilgrim rabbits, a smite, three days of fire,
+winter, spring. Right: a fresh <code>eden!</code> world. Every frame is genuine game output.</em></p>
 
 ## Mac setup
 
 Terra supports current macOS on both Apple Silicon and Intel. It needs Ruby
-3.1 or newer and pins the known-good Ruby 3.4.10 for repeatable setup. Apple's
+3.1 or newer and pins a known-good version in `.ruby-version` (currently
+4.0.5) — the launchers, CI, and RubyMine all read that one file. Apple's
 `/usr/bin/ruby` is 2.6 and is too old.
 
 On a fresh Mac, install [Homebrew](https://brew.sh/) if needed, then:
