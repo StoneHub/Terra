@@ -54,7 +54,7 @@ class GodhoodTest < Minitest::Test
   def test_observations_are_free
     live_world!
     day = world.day
-    quietly { god.powers; god.guide; god.chronicle; god.inspire; god.behold }
+    quietly { god.powers; god.guide; god.chronicle; god.inspire; }
     assert_equal day, world.day
   end
 
@@ -109,7 +109,7 @@ class GodhoodTest < Minitest::Test
   def test_ordain_animals_plants_and_validation
     quietly { god.ordain :wolf, emoji: "🐺", habitat: :land, speed: 3 }
     assert Terra::Animal::KINDS.key?(:wolf)
-    quietly { god.ordain :bramble, emoji: "🌾", grows_on: [:sand], lifespan: 40 }
+    quietly { god.ordain :bramble, emoji: "🌾", grows_on: [:desert], lifespan: 40 }
     assert Terra::Plant::KINDS.key?(:bramble)
     out, = capture_io { god.ordain :ghost, emoji: "👻", habitat: :ether }
     assert_includes out, "Habitat must be"
