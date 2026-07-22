@@ -1,23 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="288" height="385" viewBox="0 0 288 385" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="17">
+<svg xmlns="http://www.w3.org/2000/svg" width="312" height="385" viewBox="0 0 312 385" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="16">
 <style>
   .p { fill: #9bd684; } .cmd { fill: #e6ecf4; }
   .hdr { fill: #e8c66a; } .dim { fill: #a9b6c4; font-size: 14px; }
-  .map { font-size: 18px; }
+  .map { font-size: 17px; }
   text { white-space: pre; }
 </style>
-<rect width="288" height="385" rx="10" fill="#0c1013"/>
+<rect width="312" height="385" rx="10" fill="#0c1013"/>
 <circle cx="22" cy="22" r="6" fill="#ff5f57"/><circle cx="42" cy="22" r="6" fill="#febc2e"/><circle cx="62" cy="22" r="6" fill="#28c840"/>
-<text x="144" y="27" text-anchor="middle" fill="#7d8894" font-size="13">irb — terra</text>
+<text x="156" y="27" text-anchor="middle" fill="#7d8894" font-size="13">irb — terra</text>
 <g><text x="18" y="70" class="p">&gt;&gt; <tspan class="cmd">eden!</tspan></text>
 <text x="18" y="94" class="hdr">☀️  Terra — day 0</text>
-<text y="118" class="map"><tspan x="18">🟫</tspan><tspan x="39">🟫</tspan><tspan x="60">🟫</tspan><tspan x="81">⛰️</tspan><tspan x="102">🟫</tspan><tspan x="123">🟫</tspan><tspan x="144">🟫</tspan><tspan x="165">🐇</tspan><tspan x="186">🟫</tspan><tspan x="207">🟫</tspan><tspan x="228">🟫</tspan><tspan x="249">🟫</tspan></text>
-<text y="142" class="map"><tspan x="18">🟫</tspan><tspan x="39">🟫</tspan><tspan x="60">⛰️</tspan><tspan x="81">⛰️</tspan><tspan x="102">⛰️</tspan><tspan x="123">🪷</tspan><tspan x="144">🟫</tspan><tspan x="165">🟫</tspan><tspan x="186">🟫</tspan><tspan x="207">🟫</tspan><tspan x="228">🟫</tspan><tspan x="249">🟫</tspan></text>
-<text y="166" class="map"><tspan x="18">🐢</tspan><tspan x="39">⛰️</tspan><tspan x="60">⛰️</tspan><tspan x="81">⛰️</tspan><tspan x="102">⛰️</tspan><tspan x="123">⛰️</tspan><tspan x="144">🌊</tspan><tspan x="165">🟫</tspan><tspan x="186">🟫</tspan><tspan x="207">🟫</tspan><tspan x="228">🟫</tspan><tspan x="249">🌿</tspan></text>
-<text y="190" class="map"><tspan x="18">🟫</tspan><tspan x="39">🟫</tspan><tspan x="60">⛰️</tspan><tspan x="81">⛰️</tspan><tspan x="102">⛰️</tspan><tspan x="123">🪷</tspan><tspan x="144">🟫</tspan><tspan x="165">🟫</tspan><tspan x="186">🟫</tspan><tspan x="207">🟫</tspan><tspan x="228">🟫</tspan><tspan x="249">🟫</tspan></text>
-<text y="214" class="map"><tspan x="18">🟫</tspan><tspan x="39">🟨</tspan><tspan x="60">🟫</tspan><tspan x="81">⛰️</tspan><tspan x="102">🌊</tspan><tspan x="123">🐟</tspan><tspan x="144">🟫</tspan><tspan x="165">🟫</tspan><tspan x="186">🟫</tspan><tspan x="207">🟫</tspan><tspan x="228">🟫</tspan><tspan x="249">🟫</tspan></text>
-<text y="238" class="map"><tspan x="18">🟨</tspan><tspan x="39">🟨</tspan><tspan x="60">🟨</tspan><tspan x="81">🦅</tspan><tspan x="102">🌊</tspan><tspan x="123">🟫</tspan><tspan x="144">🟫</tspan><tspan x="165">🟫</tspan><tspan x="186">🟫</tspan><tspan x="207">🟫</tspan><tspan x="228">🟫</tspan><tspan x="249">🟫</tspan></text>
-<text y="262" class="map"><tspan x="18">🟫</tspan><tspan x="39">🟨</tspan><tspan x="60">🐇</tspan><tspan x="81">🟫</tspan><tspan x="102">🟫</tspan><tspan x="123">🟫</tspan><tspan x="144">🌼</tspan><tspan x="165">🟫</tspan><tspan x="186">🌿</tspan><tspan x="207">🌿</tspan><tspan x="228">🟫</tspan><tspan x="249">🟫</tspan></text>
-<text y="286" class="map"><tspan x="18">🟫</tspan><tspan x="39">🟫</tspan><tspan x="60">🟫</tspan><tspan x="81">🟫</tspan><tspan x="102">🟫</tspan><tspan x="123">🌼</tspan><tspan x="144">🟫</tspan><tspan x="165">🟫</tspan><tspan x="186">🌲</tspan><tspan x="207">🌿</tspan><tspan x="228">🐇</tspan><tspan x="249">🟫</tspan></text>
-<text y="310" class="map"><tspan x="18">🌼</tspan><tspan x="39">🟫</tspan><tspan x="60">🟫</tspan><tspan x="81">🟫</tspan><tspan x="102">🟫</tspan><tspan x="123">🟫</tspan><tspan x="144">🟫</tspan><tspan x="165">🟫</tspan><tspan x="186">🟫</tspan><tspan x="207">🌲</tspan><tspan x="228">🟫</tspan><tspan x="249">🟫</tspan></text>
+<text y="118" class="map" text-anchor="middle"><tspan x="29">🟫</tspan><tspan x="52">🟫</tspan><tspan x="75">🟫</tspan><tspan x="98">⛰️</tspan><tspan x="121">🟫</tspan><tspan x="144">🟫</tspan><tspan x="167">🟫</tspan><tspan x="190">🐇</tspan><tspan x="213">🟫</tspan><tspan x="236">🟫</tspan><tspan x="259">🟫</tspan><tspan x="282">🟫</tspan></text>
+<text y="142" class="map" text-anchor="middle"><tspan x="29">🟫</tspan><tspan x="52">🟫</tspan><tspan x="75">⛰️</tspan><tspan x="98">⛰️</tspan><tspan x="121">⛰️</tspan><tspan x="144">🪷</tspan><tspan x="167">🟫</tspan><tspan x="190">🟫</tspan><tspan x="213">🟫</tspan><tspan x="236">🟫</tspan><tspan x="259">🟫</tspan><tspan x="282">🟫</tspan></text>
+<text y="166" class="map" text-anchor="middle"><tspan x="29">🐢</tspan><tspan x="52">⛰️</tspan><tspan x="75">⛰️</tspan><tspan x="98">⛰️</tspan><tspan x="121">⛰️</tspan><tspan x="144">⛰️</tspan><tspan x="167">🌊</tspan><tspan x="190">🟫</tspan><tspan x="213">🟫</tspan><tspan x="236">🟫</tspan><tspan x="259">🟫</tspan><tspan x="282">🌿</tspan></text>
+<text y="190" class="map" text-anchor="middle"><tspan x="29">🟫</tspan><tspan x="52">🟫</tspan><tspan x="75">⛰️</tspan><tspan x="98">⛰️</tspan><tspan x="121">⛰️</tspan><tspan x="144">🪷</tspan><tspan x="167">🟫</tspan><tspan x="190">🟫</tspan><tspan x="213">🟫</tspan><tspan x="236">🟫</tspan><tspan x="259">🟫</tspan><tspan x="282">🟫</tspan></text>
+<text y="214" class="map" text-anchor="middle"><tspan x="29">🟫</tspan><tspan x="52">🟨</tspan><tspan x="75">🟫</tspan><tspan x="98">⛰️</tspan><tspan x="121">🌊</tspan><tspan x="144">🐟</tspan><tspan x="167">🟫</tspan><tspan x="190">🟫</tspan><tspan x="213">🟫</tspan><tspan x="236">🟫</tspan><tspan x="259">🟫</tspan><tspan x="282">🟫</tspan></text>
+<text y="238" class="map" text-anchor="middle"><tspan x="29">🟨</tspan><tspan x="52">🟨</tspan><tspan x="75">🟨</tspan><tspan x="98">🦅</tspan><tspan x="121">🌊</tspan><tspan x="144">🟫</tspan><tspan x="167">🟫</tspan><tspan x="190">🟫</tspan><tspan x="213">🟫</tspan><tspan x="236">🟫</tspan><tspan x="259">🟫</tspan><tspan x="282">🟫</tspan></text>
+<text y="262" class="map" text-anchor="middle"><tspan x="29">🟫</tspan><tspan x="52">🟨</tspan><tspan x="75">🐇</tspan><tspan x="98">🟫</tspan><tspan x="121">🟫</tspan><tspan x="144">🟫</tspan><tspan x="167">🌼</tspan><tspan x="190">🟫</tspan><tspan x="213">🌿</tspan><tspan x="236">🌿</tspan><tspan x="259">🟫</tspan><tspan x="282">🟫</tspan></text>
+<text y="286" class="map" text-anchor="middle"><tspan x="29">🟫</tspan><tspan x="52">🟫</tspan><tspan x="75">🟫</tspan><tspan x="98">🟫</tspan><tspan x="121">🟫</tspan><tspan x="144">🌼</tspan><tspan x="167">🟫</tspan><tspan x="190">🟫</tspan><tspan x="213">🌲</tspan><tspan x="236">🌿</tspan><tspan x="259">🐇</tspan><tspan x="282">🟫</tspan></text>
+<text y="310" class="map" text-anchor="middle"><tspan x="29">🌼</tspan><tspan x="52">🟫</tspan><tspan x="75">🟫</tspan><tspan x="98">🟫</tspan><tspan x="121">🟫</tspan><tspan x="144">🟫</tspan><tspan x="167">🟫</tspan><tspan x="190">🟫</tspan><tspan x="213">🟫</tspan><tspan x="236">🌲</tspan><tspan x="259">🟫</tspan><tspan x="282">🟫</tspan></text>
 <text x="18" y="334" class="dim">🐾 7 animals · 🌱 9 plants</text></g>
 </svg>
