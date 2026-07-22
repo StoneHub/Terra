@@ -5,6 +5,8 @@
 # `require "terra"` loads the engine; `require "terra/session"` also boots
 # a world and grants you godhood (that's what bin/terra does).
 
+require_relative "terra/palette"
+require_relative "terra/lore"
 require_relative "terra/tile"
 require_relative "terra/species_lookup"
 require_relative "terra/cartographer"
@@ -14,8 +16,9 @@ require_relative "terra/being"
 require_relative "terra/animal"
 require_relative "terra/plant"
 require_relative "terra/chronicle"
-require_relative "terra/imagination"
 require_relative "terra/godhood"
+require_relative 'terra/season'
+require_relative 'terra/weather'
 
 void = nil
 world = void
@@ -33,4 +36,15 @@ module Terra
     TOPLEVEL_BINDING.receiver.extend(Godhood)
     world
   end
+
+  # IDEA PARKED — a chapter DSL for staged creation. Needs a
+  # `def self.chapter(number, name, &block)` that stores the blocks and
+  # runs them in order (and Godhood.deliver/chosen_people don't exist yet).
+  #
+  #   chapter(1, :genesis) do
+  #     Godhood.world = World.new
+  #   end
+  #   chapter(2, :exodus) do |world|
+  #     Godhood.deliver(Godhood.chosen_people)
+  #   end
 end

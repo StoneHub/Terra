@@ -23,7 +23,7 @@ class LifeTest < Minitest::Test
     world.advance!(10)
     assert_equal :water, fish.tile.terrain
 
-    quietly { lake.ice_over! }
+    lake.tiles.each { |t| t.terrain = :ice }
     spot = fish.pos
     world.advance!(5)
     assert_equal spot, fish.pos, "fish should be trapped under ice"
@@ -83,8 +83,10 @@ class LifeTest < Minitest::Test
   def test_separate_root_seeds_have_separate_colony_budgets
     Terra::Plant.ordain(:test_clover, emoji: "☘️", grows_on: %i[plains meadow],
                         spread: 1.0, spread_limit: 2, lifespan: 100)
-    first = quietly { god.spawn :test_clover, at: [2, 2] }
-    second = quietly { god.spawn :test_clover, at: [9, 6] }
+    # breathe, not god.spawn — spawn's charged day would tick both plants
+    # (spread: 1.0 seeds on every tick) and spoil the exact budget counts.
+    first = world.breathe(:test_clover, at: [2, 2], record: false).first
+    second = world.breathe(:test_clover, at: [9, 6], record: false).first
 
     first.send(:seed_neighbor)
 
@@ -95,15 +97,14 @@ class LifeTest < Minitest::Test
   end
 
   def test_smite_leaves_remains_that_fade
-    victim = quietly { god.spawn :tortoise, at: [2, 2] }
+    victim = quietly { god.spawn(:tortoise, at: [2, 2]) { |t| t.stay } }
     quietly { god.smite victim }
     skull = world.beings.grep(Terra::Remains).first
     assert skull
     assert_equal [2, 2], skull.pos
     assert_includes world.render, "💀"
 
-    world.advance!(1)
-    assert world.beings.grep(Terra::Remains).any?, "skull should linger a day"
+    # smite's own charged day already aged the skull once (LINGER is 2).
     world.advance!(2)
     assert_empty world.beings.grep(Terra::Remains)
   end
@@ -118,7 +119,8 @@ class LifeTest < Minitest::Test
 
   def test_near_accepts_beings_features_and_coords
     lake = quietly { god.spawn :lake, at: [5, 4] }
-    beast = quietly { god.spawn :tortoise, at: [5, 6] }
+    # a stay brain: spawn's charged day must not wander the beast off-spot
+    beast = quietly { god.spawn(:tortoise, at: [5, 6]) { |t| t.stay } }
     assert beast.near?(lake)
     assert beast.near?([5, 5], range: 1)
     assert beast.near?(beast, range: 0)

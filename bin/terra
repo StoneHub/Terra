@@ -4,12 +4,16 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+# The pinned Ruby lives in .ruby-version — one source of truth for
+# mise, RubyMine, CI, and this launcher.
+PIN="$(cat "$ROOT/.ruby-version")"
+
 if command -v mise >/dev/null 2>&1; then
-  if ! MISE_RUBY_COMPILE=false mise where ruby@3.4.10 >/dev/null 2>&1; then
-    echo "Terra's Ruby is not installed. Run: bin/setup" >&2
+  if ! MISE_RUBY_COMPILE=false mise where "ruby@${PIN}" >/dev/null 2>&1; then
+    echo "Terra's Ruby ${PIN} is not installed. Run: bin/setup" >&2
     exit 1
   fi
-  exec mise exec ruby@3.4.10 -- ruby bin/play.rb
+  exec mise exec "ruby@${PIN}" -- ruby bin/play.rb
 fi
 
 if ! command -v ruby >/dev/null 2>&1 || \

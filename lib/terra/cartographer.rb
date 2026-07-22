@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "unicode/display_width"
+
 module Terra
   # Draws a World as terminal text. All presentation lives here — headers,
   # glyph choices, layout — so the model never changes when the look does.
@@ -20,12 +22,10 @@ module Terra
     def header
       # `world.frozen?` is Object#frozen? — the real thing. Great Freeze calls
       # World#freeze, whose `super` reaches Object#freeze.
-      if world.frozen? then "🥶 The Great Freeze — no usable energy remains. Only a new `big_bang!` can follow."
-      elsif world.lit? then "#{World::WEATHER.fetch(world.weather)}  Terra — day #{world.day}"
-      elsif world.day.zero? && world.features.empty?
-        "🌑 The Void — darkness upon the face of the deep"
-      else
-        "🌑 Darkness covers Terra — day #{world.day}. The world waits beneath, unseen."
+      if world.frozen?
+        Lore::GREAT_FREEZE_HEADER
+      elsif world.lit? then "#{world.sky.emoji}  Terra — day #{world.day}"
+      else Lore::VOID_HEADER
       end
     end
 
@@ -36,15 +36,22 @@ module Terra
     def map_rows
       occupied = world.beings.group_by { |b| [b.x, b.y] }
       world.tiles.each_slice(world.width).map.with_index do |row, y|
-        format("%2d  ", y) + row.map { |tile| glyph(tile, occupied) }.join
+        format("%2d  ", y) + row.map { |tile| cell(glyph(tile, occupied)) }.join
       end
     end
 
     def glyph(tile, occupied)
-      return "· " if world.frozen?
+      return "·" if world.frozen?
       return "⬛" unless world.lit?
 
       occupied[[tile.x, tile.y]]&.last&.emoji || tile.emoji
+    end
+
+    # Every map cell is exactly 2 terminal columns, whatever the glyph —
+    # narrow marks (◾, ·) get a space; full-width emoji get none. The `2`
+    # arg treats ambiguous-width characters as wide, like terminals do.
+    def cell(glyph)
+      glyph + " " * [2 - Unicode::DisplayWidth.of(glyph, 2), 0].max
     end
 
     def tally

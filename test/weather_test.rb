@@ -32,14 +32,14 @@ class WeatherTest < Minitest::Test
       seen << world.weather
     end
     assert_operator seen.uniq.size, :>, 1, "thirty days should see more than one sky"
-    assert(seen.all? { |w| Terra::World::WEATHER.key?(w) })
+    assert(seen.all? { |w| Terra::Weather::REGISTRY.key?(w) })
   end
 
   def test_snow_stills_the_plants
     quietly { god.sow 6 }
     # Tick plants directly with the sky pinned — advance! reshuffles the
     # weather at dawn, so it can't hold a note for five straight days.
-    world.instance_variable_set(:@weather, :snow)
+    world.instance_variable_set(:@weather, Terra::Weather.summon(:snow))
     before = world.plants.size
     5.times { world.plants.dup.each(&:tick) }
     assert_equal before, world.plants.size, "nothing should spread under snow"
@@ -67,7 +67,7 @@ class WeatherTest < Minitest::Test
   def test_spring_only_thaws_water_claimed_by_that_winter
     old_ice = quietly { god.spawn :lake, at: [2, 2], size: 1 }
     winter_water = quietly { god.spawn :lake, at: [9, 6], size: 1 }
-    quietly { old_ice.ice_over! }
+    old_ice.tiles.each { |t| t.terrain = :ice } # iced before winter, by hand
 
     quietly { god.winter! }
     quietly { god.spring! }
@@ -83,11 +83,23 @@ class WeatherTest < Minitest::Test
     assert_equal :snow, world.weather
   end
 
+  def test_rain_douses_fires
+    skip "TODO(Monroe): implement Rain#daily_event, then delete this skip"
+    world.lightning!(world.at(5, 4))
+    refute_empty world.fires
+
+    world.instance_variable_set(:@weather, Terra::Weather.summon(:rain))
+    world.advance!(3, quiet: true) # quiet: the sky holds at :rain
+
+    assert_empty world.fires
+    assert(world.history.any? { |e| e[:note].include?("rain") })
+  end
+
   def test_storms_eventually_throw_lightning
     quietly { god.let_there_be :storm }
     60.times do
       world.advance!(1)
-      world.instance_variable_set(:@weather, :storm)
+      world.instance_variable_set(:@weather, Terra::Weather.summon(:storm))
     end
     assert(world.tiles.any? { |t| t.terrain == :scorched }, "a held storm should scorch something in 60 days")
   end
@@ -96,7 +108,7 @@ class WeatherTest < Minitest::Test
     center = world.at(5, 4)
     target = world.at(6, 4)
     [world.at(4, 4), world.at(5, 3), world.at(5, 5)].each { |tile| tile.terrain = :water }
-    victim = quietly { god.spawn :rabbit, at: [target.x, target.y] }
+    victim = quietly { god.spawn(:rabbit, at: [target.x, target.y]) { |r| r.stay } }
 
     world.lightning!(center)
     assert world.burning?(center)
@@ -123,7 +135,7 @@ class WeatherTest < Minitest::Test
 
   def test_sow_grows_natives_of_each_terrain
     quietly { god.spawn :desert, at: [5, 4], size: 3 }
-    sown = quietly { god.sow 10, on: :sand }
+    sown = quietly { god.sow 10, on: :desert }
     refute_empty sown
     assert(sown.all? { |p| p.kind == :cactus })
   end
@@ -132,6 +144,28 @@ class WeatherTest < Minitest::Test
     quietly { god.spawn :mountain, at: [5, 4], size: 4 }
     out, = capture_io { god.sow 5, on: :mountain }
     assert_includes out, "none take root"
+  end
+
+  def test_sow_refuses_a_non_number_gracefully
+    out, = capture_io { god.sow :seed }
+    assert_includes out, "number of seeds"
+    assert_empty world.plants
+  end
+
+  def test_sow_translates_landform_kinds_to_their_terrain
+    quietly { god.spawn :lake, at: [5, 4], size: 3 }
+    sown = quietly { god.sow 10, on: :lake } # :lake means its :water ground
+    refute_empty sown
+    assert(sown.all? { |p| p.kind == :lily })
+  end
+
+  def test_sow_accepts_a_feature_reference
+    field = quietly { god.spawn :meadow, at: [2, 2], size: 2 }
+    far_meadow = quietly { god.spawn :meadow, at: [9, 6], size: 1 }
+    sown = quietly { god.sow 12, on: field }
+    refute_empty sown
+    assert(sown.all? { |p| field.tiles.include?(world.at(*p.pos)) }, "seeds stay inside the referenced landform")
+    assert(far_meadow.tiles.none? { |t| world.plants.any? { |p| p.pos == [t.x, t.y] } })
   end
 
   def test_sow_records_once_not_per_seed

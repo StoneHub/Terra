@@ -241,12 +241,12 @@
         <p>IRB prints every expression's return value. Terra draws itself through that echo: <code>world</code> is a map because <code>World#inspect</code> returns one. If you can see it, it's a real object you can hold.</p>
       </div>
       <div class="card">
-        <h3>⏳ Time waits for you</h3>
-        <p>There is no engine loop. Nothing moves until you spend days explicitly: <code>pass</code> for one, <code>pass 7</code> for a week. Between commands the world is a photograph.</p>
+        <h3>⏳ Acting spends time</h3>
+        <p>There is no engine loop — but every successful act costs days: most powers one, <code>terraform</code> three, the seasons two. A refused act costs nothing; observing (<code>world</code>, <code>chronicle</code>, <code>guide</code>) is always free. <code>pass 7</code> spends a week on purpose.</p>
       </div>
       <div class="card">
         <h3>❄️ Seasons are state</h3>
-        <p><code>winter!</code> and <code>spring!</code> reversibly mutate climate. <code>lake.ice_over!</code> and <code>lake.thaw!</code> do the same locally. These are game mechanics, not Ruby freezing.</p>
+        <p><code>winter!</code> and <code>spring!</code> reversibly mutate climate. Ice is terrain state — a game mechanic, not Ruby freezing.</p>
       </div>
       <div class="card">
         <h3>🥶 The Great Freeze is forever</h3>
@@ -312,13 +312,11 @@ You are a god. Type `powers` to see your abilities.</span></pre>
         <h3>Change it after the fact</h3>
         <p>The object stays alive. Rename it with plain assignment, mutate it with its own methods — the map redraws itself after every act.</p>
         <div class="term">
-          <div class="term-bar"><span class="title">irb — terra</span><button class="copy" data-cmd="lake.ice_over!">copy</button></div>
-          <pre><span class="p">&gt;&gt;</span> lake.ice_over!
-<span class="out map"> 3  🟩🟩🟩🧊🟩🟩
- 4  🟩🟩🧊🧊🧊🟩
- 5  🟩🟩🟩🧊🟩🟩</span>
-<span class="out">=&gt; 🧊 Lake "Mirrormere" — 5 tiles centered near (3, 4)</span>
-<span class="p">&gt;&gt;</span> lake.thaw!</pre>
+          <div class="term-bar"><span class="title">irb — terra</span><button class="copy" data-cmd="lake.name = &quot;Mirrormere&quot;">copy</button></div>
+          <pre><span class="p">&gt;&gt;</span> lake.name = "Mirrormere"
+<span class="out">=&gt; "Mirrormere"</span>
+<span class="p">&gt;&gt;</span> lake
+<span class="out">=&gt; 🌊 Lake "Mirrormere" — 5 tiles centered near (3, 4)</span></pre>
         </div>
       </div>
     </div>
@@ -361,7 +359,7 @@ You are a god. Type `powers` to see your abilities.</span></pre>
 
   <section id="grimoire">
     <h2>The grimoire</h2>
-    <p class="section-note">Nine complete rituals, ready to paste. In the game, <code>inspire</code> deals you one at random.</p>
+    <p class="section-note">Complete rituals, ready to paste. In the game, <code>inspire</code> deals you one at random.</p>
     <div class="cards" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
       <div class="card">
         <h3>🐇 The Pilgrimage</h3><p>A rabbit with divine purpose.</p>
@@ -390,12 +388,6 @@ world.animals.max_by(&amp;:age)   # the elder</pre>
         <h3>⚡ The Reckoning</h3><p>Judgment for everything past its fifth year.</p>
         <pre class="mono" style="font-size:0.8rem; overflow-x:auto; margin:0.5rem 0 0;">elders = world.animals.select { |a| a.age > 5 }
 smite elders</pre>
-      </div>
-      <div class="card">
-        <h3>🌑 Nightfall</h3><p>Darkness is a pause; the Great Freeze is an ending.</p>
-        <pre class="mono" style="font-size:0.8rem; overflow-x:auto; margin:0.5rem 0 0;">let_there_be :darkness
-pass 3    # refused — time needs light
-let_there_be :light   # all exactly as it was</pre>
       </div>
       <div class="card">
         <h3>⏳ The Long Silence</h3><p>Walk away. See what the world does without you.</p>
@@ -433,8 +425,8 @@ pass 30</pre>
         <pre class="mono" style="font-size:0.8rem; overflow-x:auto; margin:0.5rem 0 0;">big_bang! width: 20, height: 12
 let_there_be :light
 terraform :water
-spawn :grassland, size: 2   # an island
-spawn :grassland, size: 2   # another
+spawn :meadow, size: 2   # an island
+spawn :meadow, size: 2   # another
 let_there_be :life
 spawn :fish, count: 4
 spawn :hawk
@@ -483,12 +475,11 @@ chronicle!</pre>
         <tr><td><code>spawn :lake, at: [x, y], size: 2, name: "…"</code></td><td>Create a landform; all keywords optional. Kinds: <code>:lake :river :mountain :forest :desert :grassland</code>. Returns the thing itself.</td></tr>
         <tr><td><code>spawn :river, at: [0, 4], length: world.width, width: 2</code></td><td>Run connected 🌊 water across the map. <code>length:</code> controls its traversal and <code>width:</code> controls its water band.</td></tr>
         <tr><td><code>terraform :meadow</code></td><td>Repaint <strong>every remaining barren 🟫 tile</strong> as one terrain (<code>:sand</code>, <code>:water</code>, <code>:forest</code>…). Claimed and grown land is untouched — it fills the gaps between your works. <code>terraform :water</code> makes an ocean world; land animals will regret it.</td></tr>
-        <tr><td><code>let_there_be :darkness</code></td><td>Withdraw the light. The world hides (all ⬛) and time refuses to pass — but nothing is destroyed. <code>let_there_be :light</code> restores it exactly. A boolean pauses; the Great Freeze ends.</td></tr>
         <tr><td><code>winter!</code> / <code>spring!</code></td><td>Reversible global climate. Winter ices water, extinguishes fire, holds snow, and traps fish; spring thaws only the water that winter claimed.</td></tr>
         <tr><td><code>let_there_be :life</code></td><td>Unlock creatures. Needs light first.</td></tr>
         <tr><td><code>spawn :rabbit, count: 3, at: [x, y]</code></td><td>Creatures: <code>:rabbit :tortoise :fish :hawk :fern :flower :lily</code>. Add a block for a divine brain (animals only).</td></tr>
         <tr><td><code>pass</code> &nbsp;/&nbsp; <code>pass 7</code></td><td>Advance time one day / a week. The only way anything moves — and the sky shifts with it.</td></tr>
-        <tr><td><code>sow 12</code> &nbsp;/&nbsp; <code>sow 6, on: :sand</code></td><td>Scatter seeds; each grows its terrain's native plant. See <em>Weather &amp; flora</em> in the Life section.</td></tr>
+        <tr><td><code>sow 12</code> &nbsp;/&nbsp; <code>sow 6, on: :desert</code></td><td>Scatter seeds; each grows its terrain's native plant. See <em>Weather &amp; flora</em> in the Life section.</td></tr>
         <tr><td><code>let_there_be :rain</code> <span style="white-space:nowrap;">(<code>:snow :storm :clear</code>)</span></td><td>Command the weather. The map header is the forecast.</td></tr>
         <tr><td><code>smite at: [x, y]</code> / <code>smite 5, 1</code> / <code>smite wolf</code></td><td>🔥 By place or by reference — see <em>Targeting &amp; smiting</em>. Kills what it lands on.</td></tr>
         <tr><td><code>unmake :lake</code> / <code>unmake "Mirkwood"</code> / <code>unmake herd</code></td><td>Remove by kind, by name, by reference, or by array. Kind/name act only when exactly one thing matches — ambiguity lists candidates. Land reverts to plains.</td></tr>
@@ -496,7 +487,6 @@ chronicle!</pre>
         <tr><td><code>great_freeze!</code></td><td>Cosmological heat death. Calls <code>World#freeze</code>, whose <code>super</code> reaches Ruby's irreversible <code>Object#freeze</code>.</td></tr>
         <tr><td><code>big_bang! width: 20, height: 12</code></td><td>Unmake everything; bind a fresh World — larger, if you ask (max 40×30). The only continuation after the Great Freeze, and the only way to "resize".</td></tr>
         <tr><td><code>ordain :wolf, emoji: "🐺", habitat: :land, speed: 3</code></td><td>Invent a species (plants: <code>grows_on: [:sand]</code> + <code>spread:</code>/<code>lifespan:</code>). See the workshop below.</td></tr>
-        <tr><td><code>world</code> &nbsp;/&nbsp; <code>behold</code></td><td>Redraw the whole map.</td></tr>
         <tr><td><code>world.at(x, y)</code></td><td>Inspect one tile — terrain, coordinates, owner.</td></tr>
         <tr><td><code>world.features</code></td><td>Everything you've made, as an array of live objects.</td></tr>
         <tr><td><code>world.animals</code> &nbsp;/&nbsp; <code>world.rabbits</code></td><td>Fauna, flora (<code>world.plants</code>), or any species by plural. <code>world.day</code> is the clock.</td></tr>
@@ -514,13 +504,13 @@ chronicle!</pre>
     <div class="cards">
       <div class="card">
         <h3><span class="glyph">🌊</span>Lake</h3>
-        <p><code>lake.ice_over!</code> → 🧊 &nbsp; <code>lake.thaw!</code> &nbsp; <code>lake.iced_over?</code></p>
+        <p><code>lake.iced_over?</code> → true when winter has claimed it 🧊</p>
         <p>Default names: Stillwater, Mirrormere, Lake Umber.</p>
       </div>
       <div class="card">
         <h3><span class="glyph">🌊</span>River</h3>
         <p><code>spawn :river, length: world.width, width: 2</code> — connected water whose path, not its emoji, makes it a river.</p>
-        <p>Rivers inherit <code>ice_over!</code>, <code>thaw!</code>, and <code>iced_over?</code> from Lake.</p>
+        <p>Rivers inherit <code>iced_over?</code> and winter behavior from Lake.</p>
       </div>
       <div class="card">
         <h3><span class="glyph">⛰️</span>Mountain</h3>
@@ -572,7 +562,7 @@ chronicle!</pre>
         <tr><td class="legend-emoji">🍄 <code>:mushroom</code></td><td>forest</td><td>18%</td><td>6 days</td></tr>
       </table>
     </div>
-    <p style="margin-top:0.75rem;">Left alone, populations find their own equilibrium: spreading fills the land, lifespans clear it. <code>pass 30</code> and watch. Or skip the placement decisions entirely: <code>sow 12</code> scatters seeds and lets each terrain grow its native — <code>sow 6, on: :sand</code> to target one biome. Seeds landing on stone are lost, and the log says how many.</p>
+    <p style="margin-top:0.75rem;">Left alone, populations find their own equilibrium: spreading fills the land, lifespans clear it. <code>pass 30</code> and watch. Or skip the placement decisions entirely: <code>sow 12</code> scatters seeds and lets each terrain grow its native — <code>sow 6, on: :desert</code> to target one biome. Seeds landing on stone are lost, and the log says how many.</p>
 
     <h3 style="font-size:1.1rem; margin:1.5rem 0 0.5rem;">Weather — the sky has moods</h3>
     <p>The map header is the forecast. Skies shift on their own as days pass (sticky — most days hold), or bend to a word: <code>let_there_be :rain</code> / <code>:snow</code> / <code>:storm</code> / <code>:clear</code>. <code>world.weather</code> asks directly.</p>
@@ -676,7 +666,7 @@ chronicle!</pre>
       <div class="term-bar"><span class="title">irb — terra</span><button class="copy" data-cmd='ordain :wolf, emoji: "🐺", habitat: :land, speed: 3'>copy</button></div>
       <pre><span class="p">&gt;&gt;</span> ordain :wolf, emoji: "🐺", habitat: :land, speed: 3
 <span class="p">&gt;&gt;</span> spawn :wolf, count: 2
-<span class="p">&gt;&gt;</span> ordain :cactus, emoji: "🌵", grows_on: [:sand], spread: 0.05, lifespan: 40
+<span class="p">&gt;&gt;</span> ordain :cactus, emoji: "🌵", grows_on: [:desert], spread: 0.05, lifespan: 40
 <span class="p">&gt;&gt;</span> spawn :cactus
 <span class="p">&gt;&gt;</span> spawn(:wolf) { |w| w.hop_toward :forest }   <span class="out"># brains work on your species too</span></pre>
     </div>
@@ -742,7 +732,7 @@ Day   5 — ⚡ Lightning strikes (3, 3) — 🌿 The smite claims the fern.</sp
     <div class="chip-group">
       <h4>Flora</h4>
       <div class="chips">
-        <button class="chip" data-glyph="🌵" title="cactus — grows_on: [:sand]">🌵</button>
+        <button class="chip" data-glyph="🌵" title="cactus — grows_on: [:desert]">🌵</button>
         <button class="chip" data-glyph="🍄" title="mushroom — grows_on: [:forest]">🍄</button>
         <button class="chip" data-glyph="🌾" title="wheat">🌾</button>
         <button class="chip" data-glyph="🌻" title="sunflower">🌻</button>
@@ -773,10 +763,10 @@ Day   5 — ⚡ Lightning strikes (3, 3) — 🌿 The smite claims the fern.</sp
     <div class="table-scroll">
       <table>
         <tr><th>Glyph</th><th>Terrain</th><th>How it happens</th></tr>
-        <tr><td class="legend-emoji">⬛</td><td>void / darkness</td><td>Before light — or after <code>let_there_be :darkness</code>.</td></tr>
+        <tr><td class="legend-emoji">⬛</td><td>void</td><td>Before light. Nothing exists yet.</td></tr>
         <tr><td class="legend-emoji">🟫</td><td>plains</td><td>Barren earth. What light makes; the blank canvas.</td></tr>
         <tr><td class="legend-emoji">🟩</td><td>meadow</td><td>What life leaves. Any earth a plant takes root in turns green — and stays green after the plant dies. The land remembers.</td></tr>
-        <tr><td class="legend-emoji">🌊 🧊</td><td>water / ice</td><td><code>spawn :lake</code>, then <code>ice_over!</code> / <code>thaw!</code>; or <code>winter!</code> / <code>spring!</code></td></tr>
+        <tr><td class="legend-emoji">🌊 🧊</td><td>water / ice</td><td><code>spawn :lake</code>; <code>winter!</code> ices it, <code>spring!</code> thaws it</td></tr>
         <tr><td class="legend-emoji">⛰️ 🌋</td><td>mountain / volcano</td><td><code>spawn :mountain</code>, then <code>erupt!</code></td></tr>
         <tr><td class="legend-emoji">🌲</td><td>forest</td><td><code>spawn :forest</code>; spreads with <code>grow!</code></td></tr>
         <tr><td class="legend-emoji">🟨</td><td>sand</td><td><code>spawn :desert</code></td></tr>
@@ -796,7 +786,7 @@ Day   5 — ⚡ Lightning strikes (3, 3) — 🌿 The smite claims the fern.</sp
         <tr><td><code>:lake</code></td><td>Symbol — interned name, compared by identity</td><td>enum entry / sealed object</td></tr>
         <tr><td><code>at: [3, 4], size: 2</code></td><td>Keyword arguments with defaults</td><td>named params with defaults</td></tr>
         <tr><td><code>lake.name = "…"</code></td><td><code>attr_accessor</code> — one line generates getter + setter</td><td><code>var</code> property</td></tr>
-        <tr><td><code>lake.ice_over!</code></td><td>Trailing <code>!</code> — convention for "mutates / has teeth"</td><td>no equivalent — pure naming culture</td></tr>
+        <tr><td><code>mtn.erupt!</code></td><td>Trailing <code>!</code> — convention for "mutates / has teeth"</td><td>no equivalent — pure naming culture</td></tr>
         <tr><td><code>lake.iced_over?</code></td><td>Trailing <code>?</code> — convention for predicates, without hiding <code>Object#frozen?</code></td><td><code>isIcedOver</code></td></tr>
         <tr><td><code>world.at(3, 4)</code> echoing a description</td><td><code>inspect</code> — every object describes itself; IRB prints it</td><td><code>toString()</code>, but load-bearing</td></tr>
         <tr><td><code>spawn</code> working bare at the prompt</td><td><code>extend</code> — a module grafted onto one object (IRB's <code>main</code>)</td><td>extension functions, scoped to an instance</td></tr>
@@ -810,10 +800,9 @@ Day   5 — ⚡ Lightning strikes (3, 3) — 🌿 The smite claims the fern.</sp
   </section>
 
   <section id="locked" class="locked">
-    <h2>Local imagination and next tiers</h2>
-    <p class="section-note">Apple's local storytelling is available now; the higher simulation tiers are still ahead.</p>
+    <h2>Next tiers</h2>
+    <p class="section-note">The higher simulation tiers are still ahead.</p>
     <div class="cards">
-      <div class="card"><h3>✨ Local Imagination</h3><p><code>mythologize lake</code> asks Apple Foundation Models for a validated name and lore; <code>omen</code> speaks one world-aware prophecy. Static text is the labeled offline fallback, Ruby remains authoritative, and <code>chronicle!</code> only exports recorded history.</p></div>
       <div class="card"><h3>🔒 Level 3 — Providence</h3><p>Enumerable as divine power: bless and smite by query. <code>world.animals.select { … }</code> is already whispering it.</p></div>
       <div class="card"><h3>🔒 Level 4 — Godhood</h3><p>Reopen classes on a living world. Rabbits learn to fly.</p></div>
     </div>

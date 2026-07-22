@@ -37,12 +37,10 @@ lake = spawn :lake, at: [3, 4], size: 2
 river = spawn :river, at: [0, 6], length: world.width, width: 2
 mtn = spawn :mountain, name: "The Old Tooth", size: 3
 mtn.erupt!
-mythologize lake                           # Apple generates a validated name + lore locally
-omen                                       # one world-aware prophecy; story only
 let_there_be :life
 spawn :rabbit, count: 3
 spawn :fern
-pass 7                                     # time moves only when you say so
+pass 7                                     # spend a week on purpose — your acts also cost days
 winter!                                    # reversible climate; spring! restores its water
 world.plants.first.spread_remaining        # every root seed has a finite colony budget
 smite 4, 4                                 # lightning starts a small fire; ◾ is cooled ash
@@ -57,8 +55,8 @@ great_freeze!                              # heat death through Ruby's real Obje
 ## The Laws of Terra
 
 1. **The echo is the UI** — IRB prints every return value; `World#inspect` returns the map.
-2. **Time passes only when you `pass`** — no engine loop; the world ticks on command, roguelike-style.
-3. **Seasons are state** — `winter!` and `spring!` reversibly mutate this world; `lake.ice_over!` and `lake.thaw!` do the same locally.
+2. **Acting spends time** — every successful power costs days (most 1, `terraform` 3, the seasons 2); a refused act costs nothing, observing is free. `pass` spends days deliberately. No engine loop — the world still only ticks on command.
+3. **Seasons are state** — `winter!` and `spring!` reversibly mutate this world; ice is terrain, never Ruby's `freeze`.
 4. **The Great Freeze is forever** — `great_freeze!` calls `World#freeze`, whose `super` invokes Ruby's real, shallow, irreversible `Object#freeze`. `big_bang!` creates and binds a different World; nothing is unfrozen.
 
 ## Why this teaches Ruby
@@ -67,7 +65,7 @@ great_freeze!                              # heat death through Ruby's real Obje
 |---|---|
 | `spawn :river, length: 12, width: 2` | symbols, keyword args, shape-specific dimensions |
 | `lake.name = "Mirrormere"` | `attr_accessor`, objects are always live |
-| `lake.ice_over!`, `lake.iced_over?` | `!`/`?` naming conventions without hiding Ruby's `freeze` API |
+| `lake.iced_over?`, `mtn.erupt!` | `?` predicates and `!` bang methods, without hiding Ruby's `freeze` API |
 | `world.at(3, 4)` at the prompt | `inspect` is IRB's UI — every echo is a render |
 | `world.features` | arrays of real objects, no DTOs anywhere |
 | reading `feature.rb` | class macros (`manifest_as`), the Rails `has_many` pattern |
@@ -105,13 +103,3 @@ raw array, queryable like everything else.
 - **Level 2 — Life** ✅ (you are here): `let_there_be :life`, tick-based time via `pass`, creatures with block-defined brains, bounded ecology and fire, terrain-aware `sow`, weather, reversible `winter!`/`spring!`, and the irreversible Great Freeze
 - **Level 3 — Providence**: Enumerable queries as divine power (`world.animals.select(&:hungry)...`)
 - **Level 4 — Godhood**: reopen classes mid-game; rabbits learn to fly
-
-## Local imagination
-
-On Apple Silicon, `mythologize feature` and `omen` use Apple's on-device
-Foundation Models framework as the primary backend. The first request compiles
-and caches Terra's small Swift bridge; later sessions reuse it. Static
-dictionaries remain the clearly labeled offline fallback, prompt anchors, and
-deterministic test fixtures. Ruby stays authoritative for simulation state and
-commands, and `chronicle!` simply exports the recorded history without asking
-the model to add prose.

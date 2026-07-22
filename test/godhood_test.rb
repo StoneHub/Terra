@@ -26,14 +26,36 @@ class GodhoodTest < Minitest::Test
     assert_includes out, ":dinner"
   end
 
-  def test_darkness_refuses_time_and_creation
-    live_world!
-    quietly { god.spawn :rabbit }
-    quietly { god.let_there_be :darkness }
-    quietly { god.pass 3 }
+  def test_every_successful_act_spends_its_days
+    quietly { god.let_there_be :light }
+    assert_equal 1, world.day
+    quietly { god.spawn :lake, at: [4, 4] }
+    assert_equal 2, world.day
+    quietly { god.terraform :meadow }
+    assert_equal 5, world.day, "terraform costs 3 days"
+    quietly { god.winter! }
+    assert_equal 7, world.day, "the seasons cost 2 days"
+    quietly { god.spring! }
+    assert_equal 9, world.day
+  end
+
+  def test_refused_acts_cost_nothing
+    quietly { god.spawn :lake } # the void refuses
     assert_equal 0, world.day
-    out, = capture_io { god.let_there_be :darkness }
-    assert_includes out, "already absolute"
+    lit_world!
+    day = world.day
+    quietly { god.let_there_be :light } # already shines
+    quietly { god.spawn :unicorn }      # unknown kind
+    quietly { god.unmake :lake }        # nothing to unmake
+    quietly { god.spring! }             # no winter to thaw
+    assert_equal day, world.day
+  end
+
+  def test_observations_are_free
+    live_world!
+    day = world.day
+    quietly { god.powers; god.guide; god.chronicle; god.inspire; }
+    assert_equal day, world.day
   end
 
   def test_smite_by_bare_coords_and_reference
@@ -53,6 +75,10 @@ class GodhoodTest < Minitest::Test
     quietly { god.smite :tortoise }
     assert_empty world.tortoises
 
+    # fresh world: the smite above started a fire, and the charged days of
+    # the spawns below would let it hunt the rabbits we're counting
+    new_god
+    live_world!
     quietly { god.spawn :rabbit, count: 3 }
     out, = capture_io { god.smite :rabbit }
     assert_includes out, "hovers"
@@ -83,7 +109,7 @@ class GodhoodTest < Minitest::Test
   def test_ordain_animals_plants_and_validation
     quietly { god.ordain :wolf, emoji: "🐺", habitat: :land, speed: 3 }
     assert Terra::Animal::KINDS.key?(:wolf)
-    quietly { god.ordain :bramble, emoji: "🌾", grows_on: [:sand], lifespan: 40 }
+    quietly { god.ordain :bramble, emoji: "🌾", grows_on: [:desert], lifespan: 40 }
     assert Terra::Plant::KINDS.key?(:bramble)
     out, = capture_io { god.ordain :ghost, emoji: "👻", habitat: :ether }
     assert_includes out, "Habitat must be"
