@@ -27,6 +27,9 @@ GEM
     reline (0.6.3)
       io-console (~> 0.5)
     tsort (0.2.0)
+    unicode-display_width (3.2.0)
+      unicode-emoji (~> 4.1)
+    unicode-emoji (4.2.0)
 
 PLATFORMS
   arm64-darwin-23
@@ -36,9 +39,10 @@ DEPENDENCIES
   irb (~> 1.15)
   minitest (~> 5.25)
   rake (~> 13.2)
+  unicode-display_width (~> 3.2)
 
 RUBY VERSION
-   ruby 4.0.5p0
+  ruby 4.0.5p0
 
 BUNDLED WITH
-   4.0.16
+  4.0.16
