@@ -15,7 +15,7 @@ module Terra
       mountain: "⛰️",
       volcano:  "🌋",
       forest:   "🌲",
-      sand:     "🟨",
+      desert:   "🟨",
       scorched: "◾",
     }.freeze
 

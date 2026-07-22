@@ -22,9 +22,9 @@ module Terra
     # What each habitat can walk on. Note fish cannot cross :ice — ice over a
     # lake and everything in it waits for a thaw that may never come.
     PASSABLE = {
-      land:  %i[plains meadow forest sand],
+      land:  %i[plains meadow forest desert],
       water: %i[water],
-      air:   %i[plains meadow forest sand water ice mountain volcano scorched],
+      air:   %i[plains meadow forest desert water ice mountain volcano scorched],
     }.freeze
 
     attr_accessor :brain

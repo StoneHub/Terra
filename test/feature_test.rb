@@ -105,24 +105,24 @@ class FeatureTest < Minitest::Test
     lake = quietly { god.spawn :lake, at: [5, 4], size: 2 }
     quietly { god.spawn :desert, at: [5, 4], size: 1 }
     quietly { god.unmake lake }
-    assert_equal :sand, world.at(5, 4).terrain
+    assert_equal :desert, world.at(5, 4).terrain
     assert_equal :plains, world.at(4, 4).terrain
   end
 
-  def test_grassland_paints_living_meadow
-    field = quietly { god.spawn :grassland, at: [5, 4], size: 2 }
-    assert_instance_of Terra::Grassland, field
+  def test_meadow_paints_living_meadow
+    field = quietly { god.spawn :meadow, at: [5, 4], size: 2 }
+    assert_instance_of Terra::Meadow, field
     assert_equal :meadow, world.at(5, 4).terrain
     assert_equal "🌾", field.emoji
   end
 
   def test_terraform_fills_only_barren_ground
     quietly { god.spawn :lake, at: [2, 2], size: 1 }
-    quietly { god.spawn :grassland, at: [8, 5], size: 1 }
-    quietly { god.terraform :sand }
+    quietly { god.spawn :meadow, at: [8, 5], size: 1 }
+    quietly { god.terraform :desert }
     assert_equal :water, world.at(2, 2).terrain, "claimed land untouched"
     assert_equal :meadow, world.at(8, 5).terrain, "grown land untouched"
-    assert_equal :sand, world.at(0, 0).terrain
+    assert_equal :desert, world.at(0, 0).terrain
     assert(world.tiles.none? { |t| t.terrain == :plains })
   end
 
@@ -130,7 +130,7 @@ class FeatureTest < Minitest::Test
     out, = capture_io { god.terraform :lava }
     assert_includes out, "refuses"
     quietly { god.terraform :meadow }
-    out, = capture_io { god.terraform :sand }
+    out, = capture_io { god.terraform :desert }
     assert_includes out, "No barren ground"
   end
 

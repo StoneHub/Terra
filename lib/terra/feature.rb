@@ -2,7 +2,7 @@
 
 module Terra
   # A named landform occupying tiles: blob-shaped Lakes/Mountains/Forests/
-  # Deserts/Grasslands, plus River's long connected band.
+  # Deserts/Meadows, plus River's long connected band.
   #
   # Each subclass declares itself with the `manifest_as` class macro below —
   # the same pattern Rails uses for `has_many` etc.: a class method that runs
@@ -159,7 +159,7 @@ module Terra
       world.at(*center)&.terrain = :volcano
       ring = world.tiles_near(*center, @radius + 1) - tiles
       ring.each(&:scorch!)
-      world.behold!
+      puts world.render
       self
     end
 
@@ -183,20 +183,20 @@ module Terra
         tile.terrain = :forest
         tiles << tile
       end
-      world.behold!
+      puts world.render
       self
     end
   end
 
   class Desert < Feature
-    manifest_as :desert, emoji: "🏜️", terrain: :sand,
+    manifest_as :desert, emoji: "🏜️", terrain: :desert,
                 names: ["The Dry Quiet", "Sunscar", "The Glass Flats"]
   end
 
-  # Green grass on demand — paints :meadow, the same terrain life leaves
-  # behind, so sown/spreading plants treat it as home ground.
-  class Grassland < Feature
-    manifest_as :grassland, emoji: "🌾", terrain: :meadow,
+  # Green grass on demand — the same :meadow terrain life leaves behind,
+  # so sown/spreading plants treat it as home ground.
+  class Meadow < Feature
+    manifest_as :meadow, emoji: "🌾", terrain: :meadow,
                 names: ["The Greensward", "Longmeadow", "The Rolling Sea"]
   end
 end
