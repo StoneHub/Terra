@@ -15,7 +15,7 @@ module Terra
       fern:     { emoji: "🌿", grows_on: %i[plains meadow forest], spread: 0.20, spread_limit: 4, lifespan: 12 },
       flower:   { emoji: "🌼", grows_on: %i[plains meadow],        spread: 0.15, spread_limit: 3, lifespan: 8  },
       lily:     { emoji: "🪷", grows_on: %i[water],                spread: 0.15, spread_limit: 3, lifespan: 10 },
-      cactus:   { emoji: "🌵", grows_on: %i[sand],                 spread: 0.05, spread_limit: 2, lifespan: 40 },
+      cactus:   { emoji: "🌵", grows_on: %i[desert],                spread: 0.05, spread_limit: 2, lifespan: 40 },
       mushroom: { emoji: "🍄", grows_on: %i[forest],               spread: 0.18, spread_limit: 3, lifespan: 6  },
     }
 
@@ -55,10 +55,10 @@ module Terra
     # snow stills it entirely.
     def act
       return die! if age > lifespan
-      return if world.weather == :snow
+      return if world.sky.stills_plants?
 
       chance = KINDS.fetch(kind)[:spread]
-      chance *= 2 if world.weather == :rain
+      chance *= world.sky.growth_bonus
       seed_neighbor if rand < chance
     end
 

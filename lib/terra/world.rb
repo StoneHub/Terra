@@ -1,34 +1,28 @@
 # frozen_string_literal: true
 
 module Terra
-  # The grid, plus everything alive on it. Starts as void; `illuminate!` is
-  # the big-bang switch, `bestow_life!` wakes Level 2. Time only moves when
-  # `advance!` is called — Godhood charges it per act (TIME_COSTS) and
-  # `pass` spends it deliberately; between ticks the world is a photograph.
-  #
-  # Presentation lives in Cartographer; plural lookups (world.rabbits) come
-  # from the SpeciesLookup mixin. This class is only simulation state.
+  # Simulation state only. Presentation → Cartographer; plurals (world.rabbits)
+  # → SpeciesLookup; time is charged by Godhood (TIME_COSTS) or spent via pass.
   class World
     include SpeciesLookup
 
-    # Default canvas. Worlds are born with their size — there is no resizing
-    # a live one. A god who wants more room asks big_bang! for it.
     DEFAULT_WIDTH  = 12
     DEFAULT_HEIGHT = 9
-
-    # The sky's moods and their map-header glyphs. Weather shifts on its own
-    # as days pass (sticky — most days the sky stays as it was), or a god
-    # sets it directly with let_there_be :storm etc.
-    WEATHER = { clear: "☀️", rain: "🌧️", snow: "❄️", storm: "⛈️" }.freeze
 
     FIRE_DURATION = 2
     FIRE_BRANCH_CHANCE = 0.45
     FIRE_SPREAD_LIMIT = 8
-    FLAMMABLE_TERRAINS = %i[plains meadow forest].freeze
+    FLAMMABLE_TERRAINS = %i[plains meadow forest].freeze # %i[] = array of symbols
+    # Struct.new returns a Class — lightweight value types. (look into OpenStruct)
     Blaze = Struct.new(:remaining)
     Fire = Struct.new(:days, :blaze, :has_spread)
 
-    attr_reader :width, :height, :features, :beings, :day, :history, :tiles, :weather, :season, :ending
+    attr_reader :width, :height, :features, :beings, :day, :history, :tiles, :ending
+
+    def weather = @weather.kind # symbol out — callers compare == :storm
+    def sky     = @weather      # the object — .emoji, .stills_plants?, .daily_event
+    def season  = @season.kind
+    def winter? = @season.winter?
 
     def initialize(width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT)
       @width = width
@@ -36,25 +30,22 @@ module Terra
       @lit = false
       @life = false
       @day = 0
-      @weather = :clear
-      @season = :temperate
+      @weather = Weather.summon(:clear)
+      @season = Season.new
       @ending = nil
       @features = []
       @beings = []
       @history = []
       @fires = {}
-      @wintered_tiles = []
       @grid = Array.new(height) do |y|
         Array.new(width) { |x| Tile.new(x: x, y: y, world: self) }
       end
-      # Computed eagerly: the tile set never changes (only terrain does),
-      # and a lazy ||= would raise FrozenError on a frozen world.
+      # Eager, not lazy ||= — a memoizing write would raise FrozenError post-freeze.
       @tiles = @grid.flatten
     end
 
-    def lit?  = @lit
+    def lit?  = @lit # endless method: def name = expression
     def life? = @life
-    def winter? = season == :winter
 
     def illuminate!
       @lit = true
@@ -69,58 +60,49 @@ module Terra
       self
     end
 
-    # A god may command the sky directly.
-    def weather=(kind)
-      raise ArgumentError, "the sky knows only #{WEATHER.keys.map(&:inspect).join(', ')}" unless WEATHER.key?(kind)
-      if winter? && kind != :snow
+    def weather=(kind) # `def name=` defines the setter `world.weather = x` calls
+      if @season.lock_sky?(kind)
         raise ArgumentError, "winter holds the sky at :snow — call spring! before commanding another sky"
       end
 
-      @weather = kind
-      record!("#{WEATHER.fetch(kind)} The sky turns to #{kind} at a word.")
+      @weather = Weather.summon(kind) # summon raises on unknown skies
+      record!("#{@weather.emoji} The sky turns to #{kind} at a word.")
     end
 
-    # Reversible world climate. Only water that this winter turned to ice is
-    # restored by spring; a lake deliberately iced over beforehand stays ice.
+    # The Winter object ices the water and remembers what it claimed.
     def winter!
       return self if winter?
 
-      @season = :winter
-      @weather = :snow
-      @wintered_tiles = tiles.select { |tile| tile.terrain == :water }
-      @wintered_tiles.each { |tile| tile.terrain = :ice }
+      @season = Winter.begin!(self)
+      @weather = Weather.summon(:snow)
       extinguished = @fires.size
       @fires.clear
-      record!("❄️ Winter takes the world — #{@wintered_tiles.size} water tiles ice over#{", #{extinguished} fires go dark" if extinguished.positive?}")
+      record!("❄️ Winter takes the world — #{@season.claimed_count} water tiles ice over#{", #{extinguished} fires go dark" if extinguished.positive?}")
       self
     end
 
+    # Spring = asking the current winter to end itself.
     def spring!
       return self unless winter?
 
-      thawed = @wintered_tiles.count { |tile| tile.terrain == :ice }
-      @wintered_tiles.each { |tile| tile.terrain = :water if tile.terrain == :ice }
-      @wintered_tiles.clear
-      @season = :temperate
-      @weather = :clear
+      thawed = @season.end!
+      @season = Season.new
+      @weather = Weather.summon(:clear)
       record!("🌱 Spring answers — #{thawed} frozen water tiles thaw")
       self
     end
 
-    # Natural lightning starts a small, finite blaze, kills whatever stands
-    # there, and leaves remains. Divine smites reuse this same bolt.
     def lightning!(tile)
       ignite!(tile, blaze: Blaze.new(FIRE_SPREAD_LIMIT))
     end
 
-    # Active flame is separate from permanent scorched terrain: burned-out
-    # tiles remain ash, while Cartographer can render only live fire as 🔥.
+    # Live flame (🔥) vs permanent scorched terrain (◾) — separate state.
     def burning?(tile) = @fires.key?(tile)
     def fires = @fires.keys
 
     def ignite!(tile, blaze:)
       tile.scorch!
-      @fires[tile] ||= Fire.new(FIRE_DURATION, blaze, false)
+      @fires[tile] ||= Fire.new(FIRE_DURATION, blaze, false) # ||= assign only if nil/absent
       victims = beings.select { |b| b.x == tile.x && b.y == tile.y }
       victims.each(&:die!)
       beings.reject!(&:dead?)
@@ -130,18 +112,13 @@ module Terra
       victims
     end
 
-    # The chronicle: every act appends a dated entry with a map snapshot.
-    # Appending works even on a frozen world — freeze is shallow, and
-    # @history points at an ordinary (unfrozen) Array.
+    # Works on a frozen world: freeze is shallow, @history's Array stays mutable.
     def record!(note)
       history << { day: day, note: note, map: render }
       nil
     end
 
-    # The Great Freeze is also a small inheritance lesson. World adds its
-    # ending, then `super` deliberately invokes Object#freeze — the real Ruby
-    # operation, shallow and irreversible. The mutable history Array can still
-    # receive the final chronicle entry after its owner is frozen.
+    # Overrides Object#freeze; `super` does the real (irreversible) freezing.
     def freeze
       return self if frozen?
 
@@ -152,7 +129,7 @@ module Terra
       self
     end
 
-    # Returns nil when off-map — callers use `if tile = world.at(...)`.
+    # nil when off-map — callers use `if tile = world.at(...)`.
     def at(x, y)
       return nil unless x.between?(0, width - 1) && y.between?(0, height - 1)
 
@@ -167,76 +144,63 @@ module Terra
       end.compact
     end
 
-    # `grep` on an Array selects by ===, so a class picks its instances —
-    # tidier than select { |b| b.is_a?(Animal) }.
+    # Array#grep selects by === , so a Class picks its instances.
     def animals = beings.grep(Animal)
     def plants  = beings.grep(Plant)
 
-    # Bring `count` creatures of `kind` into the world. Returns the newborns
-    # (empty when the world has no hospitable ground for them). Fails loudly
-    # on unknown kinds — this is a public boundary; don't trust the caller.
+    # Returns the newborns; empty when no hospitable ground. Raises on unknown kinds.
     def breathe(kind, at: nil, count: 1, brain: nil, record: true)
-      klass = if Animal::KINDS.key?(kind) then Animal
+      klass = if Animal::KINDS.key?(kind) then Animal # if is an EXPRESSION — it returns a value
               elsif Plant::KINDS.key?(kind) then Plant
               else raise ArgumentError, "unknown species #{kind.inspect} — ordain it first"
               end
 
       Array.new(count) do
-        x, y = at || klass.cradle(world: self, kind: kind)
-        next unless x
+        x, y = at || klass.cradle(world: self, kind: kind) # destructure [x, y]; nil-safe via ||
+        next unless x # nil from the block; .compact sweeps them
 
         being = klass.new(world: self, x: x, y: y, kind: kind, brain: brain)
         beings << being
         being
       end.compact.tap do |born|
+        # .tap: run the block, return the receiver unchanged
         record!("#{born.first.emoji} #{born.size} × #{kind} arrive#{' (divine brain)' if brain}") if record && born.any?
       end
     end
 
-    # One day per step: the sky shifts, every being acts, existing fires move
-    # and burn out, then storms may strike. `quiet: true` is for the days a
-    # god's own act spends (Godhood::TIME_COSTS): the world lives exactly the
-    # same, but the commanded sky holds steady and no "days pass" entry is
-    # written — the act's own chronicle note already tells the story.
+    # quiet: true — days an act charges; sky holds, no "days pass" entry.
     def advance!(days = 1, quiet: false)
       before = beings.size
       days.times do
         @day += 1
-        @weather = WEATHER.keys.sample if !quiet && !winter? && rand > 0.6 # winter holds; other skies are sticky
-        beings.dup.each(&:tick) # dup: plants seed children mid-walk
+        @weather = Weather.summon(Weather::REGISTRY.keys.sample) if !quiet && !@season.hold_weather? && rand > 0.6 # sticky skies
+        beings.dup.each(&:tick) # dup: plants seed children mid-iteration
         beings.reject!(&:dead?)
         spread = advance_fires!
         record!("🔥 Fire spreads to #{spread} new #{spread == 1 ? 'tile' : 'tiles'}") if spread.positive?
-        if @weather == :storm && rand < 0.25
-          struck = lightning!(tiles.sample)
-          record!("⛈️ Wild lightning finds the world#{" — it takes the #{struck.first.kind}" if struck.any?}")
-        end
+        @weather.daily_event(self)
       end
       return self if quiet
 
       drift = beings.size - before
       passage = days == 1 ? "1 day passes" : "#{days} days pass"
-      record!("⏳ #{passage}#{format(' (%+d souls)', drift) unless drift.zero?} — #{WEATHER.fetch(weather)} #{weather} skies")
+      # "#{x if cond}" — a failed modifier-if yields nil, which interpolates as ""
+      record!("⏳ #{passage}#{format(' (%+d souls)', drift) unless drift.zero?} — #{@weather.emoji} #{weather} skies") # %+d = always-signed int
       self
     end
 
     def render = Cartographer.new(self).render
 
-    def behold! = puts(render)
-
-    # `world` typed at the prompt echoes the whole map. See Tile#inspect for why.
+    # IRB echoes inspect — so typing `world` draws the map.
     def inspect = render
 
     private
 
-    # Each active tile gets one chance per day to ignite one cardinal neighbor.
-    # Every lightning bolt shares a finite budget across the whole resulting
-    # blaze, and newly lit tiles wait until tomorrow before they can spread.
+    # Per day: each fire may ignite one cardinal neighbor; the whole blaze
+    # shares one spread budget; new fires wait a day before spreading.
     def advance_fires!
       spread = 0
-      @fires.to_a.each do |tile, fire|
-        # The first spread is guaranteed when fuel is adjacent, so a fire never
-        # merely looks broken. Its second-day branch remains a roll.
+      @fires.to_a.each do |tile, fire| # hash pairs destructure into |key, value|
         if fire.blaze.remaining.positive? && (!fire.has_spread || rand < FIRE_BRANCH_CHANCE)
           target = fire_neighbors(tile).sample
           if target
@@ -255,7 +219,7 @@ module Terra
 
     def fire_neighbors(tile)
       [[tile.x + 1, tile.y], [tile.x - 1, tile.y], [tile.x, tile.y + 1], [tile.x, tile.y - 1]]
-        .filter_map { |x, y| at(x, y) }
+        .filter_map { |x, y| at(x, y) } # map + drop nils, one pass
         .select { |neighbor| FLAMMABLE_TERRAINS.include?(neighbor.terrain) && !burning?(neighbor) }
     end
   end
