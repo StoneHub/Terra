@@ -425,8 +425,8 @@ pass 30</pre>
         <pre class="mono" style="font-size:0.8rem; overflow-x:auto; margin:0.5rem 0 0;">big_bang! width: 20, height: 12
 let_there_be :light
 terraform :water
-spawn :grassland, size: 2   # an island
-spawn :grassland, size: 2   # another
+spawn :meadow, size: 2   # an island
+spawn :meadow, size: 2   # another
 let_there_be :life
 spawn :fish, count: 4
 spawn :hawk
@@ -479,7 +479,7 @@ chronicle!</pre>
         <tr><td><code>let_there_be :life</code></td><td>Unlock creatures. Needs light first.</td></tr>
         <tr><td><code>spawn :rabbit, count: 3, at: [x, y]</code></td><td>Creatures: <code>:rabbit :tortoise :fish :hawk :fern :flower :lily</code>. Add a block for a divine brain (animals only).</td></tr>
         <tr><td><code>pass</code> &nbsp;/&nbsp; <code>pass 7</code></td><td>Advance time one day / a week. The only way anything moves — and the sky shifts with it.</td></tr>
-        <tr><td><code>sow 12</code> &nbsp;/&nbsp; <code>sow 6, on: :sand</code></td><td>Scatter seeds; each grows its terrain's native plant. See <em>Weather &amp; flora</em> in the Life section.</td></tr>
+        <tr><td><code>sow 12</code> &nbsp;/&nbsp; <code>sow 6, on: :desert</code></td><td>Scatter seeds; each grows its terrain's native plant. See <em>Weather &amp; flora</em> in the Life section.</td></tr>
         <tr><td><code>let_there_be :rain</code> <span style="white-space:nowrap;">(<code>:snow :storm :clear</code>)</span></td><td>Command the weather. The map header is the forecast.</td></tr>
         <tr><td><code>smite at: [x, y]</code> / <code>smite 5, 1</code> / <code>smite wolf</code></td><td>🔥 By place or by reference — see <em>Targeting &amp; smiting</em>. Kills what it lands on.</td></tr>
         <tr><td><code>unmake :lake</code> / <code>unmake "Mirkwood"</code> / <code>unmake herd</code></td><td>Remove by kind, by name, by reference, or by array. Kind/name act only when exactly one thing matches — ambiguity lists candidates. Land reverts to plains.</td></tr>
@@ -487,7 +487,6 @@ chronicle!</pre>
         <tr><td><code>great_freeze!</code></td><td>Cosmological heat death. Calls <code>World#freeze</code>, whose <code>super</code> reaches Ruby's irreversible <code>Object#freeze</code>.</td></tr>
         <tr><td><code>big_bang! width: 20, height: 12</code></td><td>Unmake everything; bind a fresh World — larger, if you ask (max 40×30). The only continuation after the Great Freeze, and the only way to "resize".</td></tr>
         <tr><td><code>ordain :wolf, emoji: "🐺", habitat: :land, speed: 3</code></td><td>Invent a species (plants: <code>grows_on: [:sand]</code> + <code>spread:</code>/<code>lifespan:</code>). See the workshop below.</td></tr>
-        <tr><td><code>world</code> &nbsp;/&nbsp; <code>behold</code></td><td>Redraw the whole map.</td></tr>
         <tr><td><code>world.at(x, y)</code></td><td>Inspect one tile — terrain, coordinates, owner.</td></tr>
         <tr><td><code>world.features</code></td><td>Everything you've made, as an array of live objects.</td></tr>
         <tr><td><code>world.animals</code> &nbsp;/&nbsp; <code>world.rabbits</code></td><td>Fauna, flora (<code>world.plants</code>), or any species by plural. <code>world.day</code> is the clock.</td></tr>
@@ -563,7 +562,7 @@ chronicle!</pre>
         <tr><td class="legend-emoji">🍄 <code>:mushroom</code></td><td>forest</td><td>18%</td><td>6 days</td></tr>
       </table>
     </div>
-    <p style="margin-top:0.75rem;">Left alone, populations find their own equilibrium: spreading fills the land, lifespans clear it. <code>pass 30</code> and watch. Or skip the placement decisions entirely: <code>sow 12</code> scatters seeds and lets each terrain grow its native — <code>sow 6, on: :sand</code> to target one biome. Seeds landing on stone are lost, and the log says how many.</p>
+    <p style="margin-top:0.75rem;">Left alone, populations find their own equilibrium: spreading fills the land, lifespans clear it. <code>pass 30</code> and watch. Or skip the placement decisions entirely: <code>sow 12</code> scatters seeds and lets each terrain grow its native — <code>sow 6, on: :desert</code> to target one biome. Seeds landing on stone are lost, and the log says how many.</p>
 
     <h3 style="font-size:1.1rem; margin:1.5rem 0 0.5rem;">Weather — the sky has moods</h3>
     <p>The map header is the forecast. Skies shift on their own as days pass (sticky — most days hold), or bend to a word: <code>let_there_be :rain</code> / <code>:snow</code> / <code>:storm</code> / <code>:clear</code>. <code>world.weather</code> asks directly.</p>
@@ -667,7 +666,7 @@ chronicle!</pre>
       <div class="term-bar"><span class="title">irb — terra</span><button class="copy" data-cmd='ordain :wolf, emoji: "🐺", habitat: :land, speed: 3'>copy</button></div>
       <pre><span class="p">&gt;&gt;</span> ordain :wolf, emoji: "🐺", habitat: :land, speed: 3
 <span class="p">&gt;&gt;</span> spawn :wolf, count: 2
-<span class="p">&gt;&gt;</span> ordain :cactus, emoji: "🌵", grows_on: [:sand], spread: 0.05, lifespan: 40
+<span class="p">&gt;&gt;</span> ordain :cactus, emoji: "🌵", grows_on: [:desert], spread: 0.05, lifespan: 40
 <span class="p">&gt;&gt;</span> spawn :cactus
 <span class="p">&gt;&gt;</span> spawn(:wolf) { |w| w.hop_toward :forest }   <span class="out"># brains work on your species too</span></pre>
     </div>
@@ -733,7 +732,7 @@ Day   5 — ⚡ Lightning strikes (3, 3) — 🌿 The smite claims the fern.</sp
     <div class="chip-group">
       <h4>Flora</h4>
       <div class="chips">
-        <button class="chip" data-glyph="🌵" title="cactus — grows_on: [:sand]">🌵</button>
+        <button class="chip" data-glyph="🌵" title="cactus — grows_on: [:desert]">🌵</button>
         <button class="chip" data-glyph="🍄" title="mushroom — grows_on: [:forest]">🍄</button>
         <button class="chip" data-glyph="🌾" title="wheat">🌾</button>
         <button class="chip" data-glyph="🌻" title="sunflower">🌻</button>
