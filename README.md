@@ -104,6 +104,9 @@ lib/terra/chronicle.rb + chronicle.html.erb   world history → standalone HTML 
 test/                  minitest suite — run with `bundle exec rake` from Terra/
 ```
 
+The class map lives in [docs/architecture.md](docs/architecture.md) — GitHub renders
+the diagram inline; it's updated in the same PR as any structural change.
+
 Every act is recorded: `chronicle` prints the story so far, `chronicle!` renders
 it to `terra-chronicle.html` with a map snapshot per act. `world.history` is the
 raw array, queryable like everything else.
