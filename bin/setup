@@ -6,10 +6,12 @@ cd "$ROOT"
 
 # A mise install is isolated to Terra and works on both Intel and Apple Silicon.
 # Prefer its precompiled Ruby so a fresh Mac does not need compiler/YAML headers.
+# The pin lives in .ruby-version — one source of truth.
+PIN="$(cat "$ROOT/.ruby-version")"
 if command -v mise >/dev/null 2>&1 && [ "${TERRA_SETUP_WITH_MISE:-0}" != "1" ]; then
-  echo "Installing Terra's pinned Ruby with mise..."
-  MISE_RUBY_COMPILE=false mise install ruby@3.4.10
-  exec env TERRA_SETUP_WITH_MISE=1 mise exec ruby@3.4.10 -- "$ROOT/bin/setup"
+  echo "Installing Terra's pinned Ruby ${PIN} with mise..."
+  MISE_RUBY_COMPILE=false mise install "ruby@${PIN}"
+  exec env TERRA_SETUP_WITH_MISE=1 mise exec "ruby@${PIN}" -- "$ROOT/bin/setup"
 fi
 
 if ! command -v ruby >/dev/null 2>&1; then
