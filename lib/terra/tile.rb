@@ -17,6 +17,7 @@ module Terra
       forest:   "🌲",
       desert:   "🟨",
       scorched: "◾",
+      snow: "⬜",
     }.freeze
 
     attr_reader :x, :y, :world
